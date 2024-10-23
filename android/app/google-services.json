@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "594015453335",
+    "project_id": "meetcake-2aa94",
+    "storage_bucket": "meetcake-2aa94.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:594015453335:android:6e7ca4b9b63b5d45f369d2",
+        "android_client_info": {
+          "package_name": "com.example.meetcake"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZuKYGr6pQg8hJJObCNNpfN8iGrmsc4dQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
