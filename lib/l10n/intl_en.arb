@@ -1,0 +1,15 @@
+{
+  "login": "Login",
+  "name": "User name",
+  "password": "Password",
+  "fillInTheFields": "Fill in the fields!",
+  "success": "Success",
+  "logIn": "Log In",
+  "dontHaveAnAccountRegister": "Don't have an account? REGISTER",
+  "en": "en",
+  "haveAnAccountAuthorize": "Have an account? AUTHORIZE",
+  "register": "Register",
+  "chooseAnotherName": "Choose another name",
+  "email": "Email",
+  "registration": "Registration"
+}

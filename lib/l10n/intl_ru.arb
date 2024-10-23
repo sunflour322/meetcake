@@ -1,0 +1,15 @@
+{
+  "login": "Авторизация",
+  "name": "Имя пользователя",
+  "password": "Пароль",
+  "fillInTheFields": "Заполните все поля!",
+  "success": "Успешно",
+  "logIn": "Войти",
+  "dontHaveAnAccountRegister": "Нет аккаунта? РЕГИСТРАЦИЯ",
+  "en": "ru",
+  "haveAnAccountAuthorize": "Уже есть аккаунт? АВТОРИЗАЦИЯ",
+  "register": "Зарегистрироваться",
+  "chooseAnotherName": "Имя занято!",
+  "email": "Email",
+  "registration": "Регистрация"
+}

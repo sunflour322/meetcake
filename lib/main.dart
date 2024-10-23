@@ -1,6 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:meetcake/generated/l10n.dart';
 import 'package:meetcake/routes.dart';
+import 'package:meetcake/theme_lng/change_lng.dart';
 import 'package:meetcake/user_service/service.dart';
 import 'package:provider/provider.dart';
 
@@ -14,7 +17,12 @@ void main() async {
         projectId: 'meetcake-2aa94',
         storageBucket: 'meetcake-2aa94.appspot.com'),
   );
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => LocaleProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -22,10 +30,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = Provider.of<LocaleProvider>(context);
     return StreamProvider.value(
         initialData: null,
         value: AuthService().currentUser,
         child: MaterialApp(
+          localizationsDelegates: const [
+            S.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          locale: localeProvider.locale,
+          supportedLocales: S.delegate.supportedLocales,
           debugShowCheckedModeBanner: false,
           title: 'MeetCake',
           initialRoute: '/',
