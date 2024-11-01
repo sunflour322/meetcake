@@ -6,11 +6,9 @@ class AuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Регистрация с проверкой уникальности имени пользователя
   Future<UserModel?> signUp(
       String username, String email, String password) async {
     try {
-      // Проверка уникальности имени пользователя
       QuerySnapshot userSnapshot = await _firestore
           .collection('users')
           .where('username', isEqualTo: username)
@@ -18,16 +16,13 @@ class AuthService {
           .get();
 
       if (userSnapshot.docs.isNotEmpty) {
-        // Если имя пользователя уже существует, возвращаем ошибку
         throw Exception("Имя пользователя уже занято");
       }
 
-      // Если имя уникально, создаем пользователя с email и паролем
       UserCredential userCredential = await _firebaseAuth
           .createUserWithEmailAndPassword(email: email, password: password);
       User user = userCredential.user!;
 
-      // Сохранение имени пользователя и email в Firestore
       await _firestore.collection('users').doc(user.uid).set({
         'username': username,
         'email': email,
@@ -35,7 +30,6 @@ class AuthService {
 
       return UserModel.fromFirebase(user);
     } catch (e) {
-      // Если произошла ошибка, выводим сообщение
       print("Ошибка регистрации: $e");
       return null;
     }

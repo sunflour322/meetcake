@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:meetcake/generated/l10n.dart';
 import 'package:meetcake/theme_lng/change_lng.dart';
+import 'package:meetcake/theme_lng/change_theme.dart';
 import 'package:meetcake/user_service/service.dart';
 import 'package:provider/provider.dart';
 import 'package:toast/toast.dart';
@@ -26,11 +27,11 @@ class _AuthPageState extends State<AuthPage> {
   Widget build(BuildContext context) {
     ToastContext().init(context);
     final localeProvider = Provider.of<LocaleProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       body: Stack(
         children: [
           Container(
-            color: const Color.fromRGBO(255, 159, 159, 1),
             height: double.infinity,
             width: double.infinity,
             child: SafeArea(
@@ -48,7 +49,6 @@ class _AuthPageState extends State<AuthPage> {
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.white),
                         borderRadius: BorderRadius.circular(50),
-                        color: const Color.fromRGBO(255, 159, 159, 1),
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(50),
@@ -203,11 +203,6 @@ class _AuthPageState extends State<AuthPage> {
                                     },
                                     child: Text(
                                       S.of(context).logIn,
-                                      style: const TextStyle(
-                                          color:
-                                              Color.fromRGBO(255, 159, 159, 1),
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 16),
                                     ),
                                   ),
                                 ),
@@ -268,10 +263,12 @@ class _AuthPageState extends State<AuthPage> {
                   backgroundColor: Color.fromRGBO(148, 185, 255, 1),
                   heroTag: 'themeBtn', // Уникальный тег для каждой кнопки
                   onPressed: () {
+                    themeProvider.toggleTheme();
+
                     // Логика смены темы будет добавлена позже
                   },
                   child: const Icon(
-                    Icons.brightness_6,
+                    Icons.brightness_6_rounded,
                     color: Colors.white,
                   ),
                 ),
