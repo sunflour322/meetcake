@@ -17,16 +17,13 @@ class RegPage extends StatefulWidget {
 }
 
 class _RegPageState extends State<RegPage> {
-  bool _isChecked = false;
   int selectedIndex = 0;
 
   TextEditingController nameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   AuthService authService = AuthService();
-  UserCRUD _userCRUD = UserCRUD(); // Используем AuthService для авторизации
-  String _smsCode = '';
-  bool _codeSent = false; // Отслеживаем, отправлен ли код
+  UserCRUD _userCRUD = UserCRUD();
 
   @override
   Widget build(BuildContext context) {
