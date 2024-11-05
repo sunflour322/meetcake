@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meetcake/pages/auth.dart';
 import 'package:meetcake/pages/catalog.dart';
+import 'package:meetcake/pages/example.dart';
 import 'package:meetcake/user_service/model.dart';
 import 'package:provider/provider.dart';
 
@@ -13,6 +14,6 @@ class LandingPage extends StatelessWidget {
     print(userModel);
     final bool check = userModel != null;
     print(check);
-    return check ? const AuthPage() : const MapScreen();
+    return check ? const MapScreen() : const AuthPage();
   }
 }

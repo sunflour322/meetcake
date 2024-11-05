@@ -189,7 +189,8 @@ class _RegPageState extends State<RegPage> {
                                     onPressed: () async {
                                       if (nameController.text.isEmpty ||
                                           emailController.text.isEmpty ||
-                                          passwordController.text.isEmpty) {
+                                          passwordController.text.isEmpty ||
+                                          passwordController.text.length < 6) {
                                         Toast.show(
                                             S.of(context).fillInTheFields);
                                       } else {

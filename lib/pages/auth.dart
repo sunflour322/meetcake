@@ -190,7 +190,8 @@ class _AuthPageState extends State<AuthPage> {
                                         )),
                                     onPressed: () async {
                                       if (nameController.text.isEmpty ||
-                                          passwordController.text.isEmpty) {
+                                          passwordController.text.isEmpty ||
+                                          passwordController.text.length < 6) {
                                         Toast.show(
                                             S.of(context).fillInTheFields);
                                       } else {
