@@ -1,269 +1,221 @@
-import 'dart:math';
-import 'dart:typed_data';
-import 'dart:ui';
+// import 'dart:async';
 
-import 'package:flutter/material.dart';
-import 'package:meetcake/widgets/control_button.dart';
-import 'package:meetcake/widgets/map_page.dart';
-import 'package:yandex_mapkit/yandex_mapkit.dart';
+// import 'package:flutter/material.dart';
+// import 'package:meetcake/widgets/control_button.dart';
+// import 'package:meetcake/widgets/map_page.dart';
+// import 'package:yandex_mapkit/yandex_mapkit.dart';
 
-class ClusterizedPlacemarkCollectionPage extends MapPage {
-  const ClusterizedPlacemarkCollectionPage({Key? key})
-      : super('ClusterizedPlacemarkCollection example', key: key);
+// class SearchPage extends MapPage {
+//   const SearchPage({Key? key}) : super('Search example', key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return _ClusterizedPlacemarkCollectionExample();
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return _SearchExample();
+//   }
+// }
 
-class _ClusterizedPlacemarkCollectionExample extends StatefulWidget {
-  @override
-  _ClusterizedPlacemarkCollectionExampleState createState() =>
-      _ClusterizedPlacemarkCollectionExampleState();
-}
+// class _SearchExample extends StatefulWidget {
+//   @override
+//   _SearchExampleState createState() => _SearchExampleState();
+// }
 
-class _ClusterizedPlacemarkCollectionExampleState
-    extends State<_ClusterizedPlacemarkCollectionExample> {
-  final List<MapObject> mapObjects = [];
+// class _SearchExampleState extends State<_SearchExample> {
+//   final TextEditingController queryController = TextEditingController();
 
-  final int kPlacemarkCount = 500;
-  final Random seed = Random();
-  final MapObjectId mapObjectId =
-      const MapObjectId('clusterized_placemark_collection');
-  final MapObjectId largeMapObjectId =
-      const MapObjectId('large_clusterized_placemark_collection');
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//         body: Column(
+//             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//             crossAxisAlignment: CrossAxisAlignment.stretch,
+//             children: <Widget>[
+//           const SizedBox(height: 20),
+//           Expanded(
+//               child: SingleChildScrollView(
+//                   child: Column(children: <Widget>[
+//             Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//               children: <Widget>[
+//                 Flexible(
+//                   child: TextField(
+//                     controller: queryController,
+//                     decoration: const InputDecoration(hintText: 'Search'),
+//                   ),
+//                 ),
+//                 ControlButton(onPressed: _search, title: 'Query'),
+//               ],
+//             ),
+//           ])))
+//         ]));
+//   }
 
-  Future<Uint8List> _buildClusterAppearance(Cluster cluster) async {
-    final recorder = PictureRecorder();
-    final canvas = Canvas(recorder);
-    const size = Size(200, 200);
-    final fillPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    final strokePaint = Paint()
-      ..color = Colors.black
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 10;
-    const radius = 60.0;
+//   void _search() async {
+//     final query = queryController.text;
 
-    final textPainter = TextPainter(
-        text: TextSpan(
-            text: cluster.size.toString(),
-            style: const TextStyle(color: Colors.black, fontSize: 50)),
-        textDirection: TextDirection.ltr);
+//     print('Search query: $query');
 
-    textPainter.layout(minWidth: 0, maxWidth: size.width);
+//     final resultWithSession = await YandexSearch.searchByText(
+//       searchText: query,
+//       geometry: Geometry.fromBoundingBox(const BoundingBox(
+//         southWest:
+//             Point(latitude: 55.76996383933034, longitude: 37.57483142322235),
+//         northEast:
+//             Point(latitude: 55.785322774728414, longitude: 37.590924677311705),
+//       )),
+//       searchOptions: const SearchOptions(
+//         searchType: SearchType.geo,
+//         geometry: false,
+//       ),
+//     );
 
-    final textOffset = Offset((size.width - textPainter.width) / 2,
-        (size.height - textPainter.height) / 2);
-    final circleOffset = Offset(size.height / 2, size.width / 2);
+//     await Navigator.push(
+//         context,
+//         MaterialPageRoute(
+//             builder: (BuildContext context) => _SessionPage(
+//                 query, resultWithSession.$1, resultWithSession.$2)));
+//   }
+// }
 
-    canvas.drawCircle(circleOffset, radius, fillPaint);
-    canvas.drawCircle(circleOffset, radius, strokePaint);
-    textPainter.paint(canvas, textOffset);
+// class _SessionPage extends StatefulWidget {
+//   final Future<SearchSessionResult> result;
+//   final SearchSession session;
+//   final String query;
 
-    final image = await recorder
-        .endRecording()
-        .toImage(size.width.toInt(), size.height.toInt());
-    final pngBytes = await image.toByteData(format: ImageByteFormat.png);
+//   const _SessionPage(this.query, this.session, this.result);
 
-    return pngBytes!.buffer.asUint8List();
-  }
+//   @override
+//   _SessionState createState() => _SessionState();
+// }
 
-  double _randomDouble() {
-    return (500 - seed.nextInt(1000)) / 1000;
-  }
+// class _SessionState extends State<_SessionPage> {
+//   final List<SearchSessionResult> results = [];
+//   bool _progress = true;
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Expanded(child: YandexMap(mapObjects: mapObjects)),
-          const SizedBox(height: 20),
-          Expanded(
-              child: SingleChildScrollView(
-                  child: Column(children: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: <Widget>[
-                ControlButton(
-                    onPressed: () async {
-                      if (mapObjects.any((el) => el.mapId == mapObjectId)) {
-                        return;
-                      }
+//   @override
+//   void initState() {
+//     super.initState();
 
-                      final mapObject = ClusterizedPlacemarkCollection(
-                        mapId: mapObjectId,
-                        radius: 30,
-                        minZoom: 15,
-                        onClusterAdded: (ClusterizedPlacemarkCollection self,
-                            Cluster cluster) async {
-                          return cluster.copyWith(
-                              appearance: cluster.appearance.copyWith(
-                                  icon: PlacemarkIcon.single(PlacemarkIconStyle(
-                                      image: BitmapDescriptor.fromAssetImage(
-                                          'lib/assets/cluster.png'),
-                                      scale: 1))));
-                        },
-                        onClusterTap: (ClusterizedPlacemarkCollection self,
-                            Cluster cluster) {
-                          print('Tapped cluster');
-                        },
-                        placemarks: [
-                          PlacemarkMapObject(
-                              mapId: const MapObjectId('placemark_1'),
-                              point: const Point(
-                                  latitude: 55.756, longitude: 37.618),
-                              consumeTapEvents: true,
-                              onTap: (PlacemarkMapObject self, Point point) =>
-                                  print('Tapped placemark at $point'),
-                              icon: PlacemarkIcon.single(PlacemarkIconStyle(
-                                  image: BitmapDescriptor.fromAssetImage(
-                                      'lib/assets/place.png'),
-                                  scale: 1))),
-                          PlacemarkMapObject(
-                              mapId: const MapObjectId('placemark_2'),
-                              point: const Point(
-                                  latitude: 59.956, longitude: 30.313),
-                              icon: PlacemarkIcon.single(PlacemarkIconStyle(
-                                  image: BitmapDescriptor.fromAssetImage(
-                                      'lib/assets/place.png'),
-                                  scale: 1))),
-                          PlacemarkMapObject(
-                              mapId: const MapObjectId('placemark_3'),
-                              point: const Point(
-                                  latitude: 39.956, longitude: 30.313),
-                              icon: PlacemarkIcon.single(PlacemarkIconStyle(
-                                  image: BitmapDescriptor.fromAssetImage(
-                                      'lib/assets/place.png'),
-                                  scale: 1))),
-                        ],
-                        onTap: (ClusterizedPlacemarkCollection self,
-                                Point point) =>
-                            print('Tapped me at $point'),
-                      );
+//     _init();
+//   }
 
-                      setState(() {
-                        mapObjects.add(mapObject);
-                      });
-                    },
-                    title: 'Add'),
-                ControlButton(
-                    onPressed: () async {
-                      if (!mapObjects.any((el) => el.mapId == mapObjectId)) {
-                        return;
-                      }
+//   @override
+//   void dispose() {
+//     super.dispose();
 
-                      final mapObject =
-                          mapObjects.firstWhere((el) => el.mapId == mapObjectId)
-                              as ClusterizedPlacemarkCollection;
+//     _close();
+//   }
 
-                      setState(() {
-                        mapObjects[mapObjects.indexOf(mapObject)] =
-                            mapObject.copyWith(placemarks: [
-                          PlacemarkMapObject(
-                              mapId: const MapObjectId('placemark_2'),
-                              point: const Point(
-                                  latitude: 59.956, longitude: 30.313),
-                              icon: PlacemarkIcon.single(PlacemarkIconStyle(
-                                  image: BitmapDescriptor.fromAssetImage(
-                                      'lib/assets/place.png'),
-                                  scale: 1))),
-                          PlacemarkMapObject(
-                              mapId: const MapObjectId('placemark_3'),
-                              point: const Point(
-                                  latitude: 39.956, longitude: 31.313),
-                              icon: PlacemarkIcon.single(PlacemarkIconStyle(
-                                  image: BitmapDescriptor.fromAssetImage(
-                                      'lib/assets/place.png'),
-                                  scale: 1))),
-                          PlacemarkMapObject(
-                              mapId: const MapObjectId('placemark_4'),
-                              point: const Point(
-                                  latitude: 59.945933, longitude: 30.320045),
-                              icon: PlacemarkIcon.single(PlacemarkIconStyle(
-                                  image: BitmapDescriptor.fromAssetImage(
-                                      'lib/assets/place.png'),
-                                  scale: 1))),
-                        ]);
-                      });
-                    },
-                    title: 'Update'),
-                ControlButton(
-                    onPressed: () async {
-                      setState(() {
-                        mapObjects.removeWhere((el) => el.mapId == mapObjectId);
-                      });
-                    },
-                    title: 'Remove')
-              ],
-            ),
-            Text('Set of $kPlacemarkCount placemarks'),
-            Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[
-                  ControlButton(
-                      onPressed: () async {
-                        if (mapObjects
-                            .any((el) => el.mapId == largeMapObjectId)) {
-                          return;
-                        }
+//   void showListDialog(){
+//      BottomSheet(
+//        onClosing: AboutDialog.new,
+//       builder: (BuildContext context) {
+//         return Scaffold(
+//         appBar: AppBar(title: Text('Search ${widget.session.id}')),
+//         body: Container(
+//             padding: const EdgeInsets.all(8),
+//             child: Column(
+//                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//                 crossAxisAlignment: CrossAxisAlignment.stretch,
+//                 children: <Widget>[
+//                   const SizedBox(height: 20),
+//                   Expanded(
+//                       child: SingleChildScrollView(
+//                           child: Column(children: <Widget>[
+//                     SizedBox(
+//                         height: 60,
+//                         child: Row(
+//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                           crossAxisAlignment: CrossAxisAlignment.center,
+//                           children: [
+//                             Text(widget.query,
+//                                 style: const TextStyle(
+//                                   fontSize: 20,
+//                                 )),
+//                             !_progress
+//                                 ? Container()
+//                                 : TextButton.icon(
+//                                     icon: const CircularProgressIndicator(),
+//                                     label: const Text('Cancel'),
+//                                     onPressed: _cancel)
+//                           ],
+//                         )),
+//                     Row(
+//                       mainAxisAlignment: MainAxisAlignment.start,
+//                       children: <Widget>[
+//                         Flexible(
+//                           child: Padding(
+//                               padding: const EdgeInsets.only(top: 20),
+//                               child: Column(
+//                                 crossAxisAlignment: CrossAxisAlignment.start,
+//                                 children: _getList(),
+//                               )),
+//                         ),
+//                       ],
+//                     ),
+//                   ])))
+//                 ])));});
+//   }
+// }
+//   List<Widget> _getList() {
+//     final list = <Widget>[];
 
-                        final largeMapObject = ClusterizedPlacemarkCollection(
-                          mapId: largeMapObjectId,
-                          radius: 30,
-                          minZoom: 15,
-                          onClusterAdded: (ClusterizedPlacemarkCollection self,
-                              Cluster cluster) async {
-                            return cluster.copyWith(
-                                appearance: cluster.appearance.copyWith(
-                                    opacity: 0.75,
-                                    icon: PlacemarkIcon.single(
-                                        PlacemarkIconStyle(
-                                            image: BitmapDescriptor.fromBytes(
-                                                await _buildClusterAppearance(
-                                                    cluster)),
-                                            scale: 1))));
-                          },
-                          onClusterTap: (ClusterizedPlacemarkCollection self,
-                              Cluster cluster) {
-                            print('Tapped cluster');
-                          },
-                          placemarks: List<PlacemarkMapObject>.generate(
-                              kPlacemarkCount, (i) {
-                            return PlacemarkMapObject(
-                                mapId: MapObjectId('placemark_$i'),
-                                point: Point(
-                                    latitude: 55.756 + _randomDouble(),
-                                    longitude: 37.618 + _randomDouble()),
-                                icon: PlacemarkIcon.single(PlacemarkIconStyle(
-                                    image: BitmapDescriptor.fromAssetImage(
-                                        'lib/assets/place.png'),
-                                    scale: 1)));
-                          }),
-                          onTap: (ClusterizedPlacemarkCollection self,
-                                  Point point) =>
-                              print('Tapped me at $point'),
-                        );
+//     if (results.isEmpty) {
+//       list.add((const Text('Nothing found')));
+//     }
 
-                        setState(() {
-                          mapObjects.add(largeMapObject);
-                        });
-                      },
-                      title: 'Add'),
-                  ControlButton(
-                      onPressed: () async {
-                        setState(() {
-                          mapObjects.removeWhere(
-                              (el) => el.mapId == largeMapObjectId);
-                        });
-                      },
-                      title: 'Remove')
-                ])
-          ])))
-        ]);
-  }
-}
+//     for (var r in results) {
+//       list.add(Text('Page: ${r.page}'));
+//       list.add(Container(height: 20));
+
+//       r.items!.asMap().forEach((i, item) {
+//         list.add(
+//             Text('Item $i: ${item.toponymMetadata!.address.formattedAddress}'));
+//       });
+
+//       list.add(Container(height: 20));
+//     }
+
+//     return list;
+//   }
+
+//   Future<void> _cancel() async {
+//     await widget.session.cancel();
+
+//     setState(() {
+//       _progress = false;
+//     });
+//   }
+
+//   Future<void> _close() async {
+//     await widget.session.close();
+//   }
+
+//   Future<void> _init() async {
+//     await _handleResult(await widget.result);
+//   }
+
+//   Future<void> _handleResult(SearchSessionResult result) async {
+//     setState(() {
+//       _progress = false;
+//     });
+
+//     if (result.error != null) {
+//       print('Error: ${result.error}');
+//       return;
+//     }
+
+//     print('Page ${result.page}: $result');
+
+//     setState(() {
+//       results.add(result);
+//     });
+
+//     if (await widget.session.hasNextPage()) {
+//       print('Got ${result.found} items, fetching next page...');
+//       setState(() {
+//         _progress = true;
+//       });
+//       await _handleResult(await widget.session.fetchNextPage());
+//     }
+//   }
+// }

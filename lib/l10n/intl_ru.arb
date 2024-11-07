@@ -11,5 +11,6 @@
   "register": "Зарегистрироваться",
   "chooseAnotherName": "Имя занято!",
   "email": "Email",
-  "registration": "Регистрация"
+  "registration": "Регистрация",
+  "search": "Поиск"
 }

@@ -19,9 +19,7 @@ class _AuthPageState extends State<AuthPage> {
   int selectedIndex = 0;
   TextEditingController nameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
-  AuthService authService =
-      AuthService(); // Используем AuthService для авторизации
-// Отслеживаем, отправлен ли код
+  AuthService authService = AuthService();
 
   @override
   Widget build(BuildContext context) {

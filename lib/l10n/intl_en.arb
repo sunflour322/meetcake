@@ -11,5 +11,6 @@
   "register": "Register",
   "chooseAnotherName": "Choose another name",
   "email": "Email",
-  "registration": "Registration"
+  "registration": "Registration",
+  "search": "Search"
 }

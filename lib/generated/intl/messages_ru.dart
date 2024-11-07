@@ -38,6 +38,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "password": MessageLookupByLibrary.simpleMessage("Пароль"),
         "register": MessageLookupByLibrary.simpleMessage("Зарегистрироваться"),
         "registration": MessageLookupByLibrary.simpleMessage("Регистрация"),
+        "search": MessageLookupByLibrary.simpleMessage("Поиск"),
         "success": MessageLookupByLibrary.simpleMessage("Успешно")
       };
 }

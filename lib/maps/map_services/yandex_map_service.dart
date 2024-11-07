@@ -12,8 +12,8 @@ class AppLatLong {
 
 class MoscowLocation extends AppLatLong {
   const MoscowLocation({
-    super.lat = 55.7522200,
-    super.long = 37.6155600,
+    super.lat = 55.7887,
+    super.long = 49.1221,
   });
 }
 
