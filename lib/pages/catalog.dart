@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:meetcake/generated/l10n.dart';
 import 'package:meetcake/user_service/service.dart';
@@ -73,11 +74,38 @@ class _MapScreenState extends State<MapScreen> {
       ),
       searchOptions: const SearchOptions(
         searchType: SearchType.biz, // Focus on business locations
-        geometry: true,
+        geometry: false,
       ),
     );
 
     _showSearchResults(resultWithSession.$2);
+    _displaySearchResultsOnMap(resultWithSession.$2);
+  }
+
+  Future<void> _displaySearchResultsOnMap(
+      Future<SearchSessionResult> futureResult) async {
+    final result = await futureResult;
+    var placeMarker; // Дожидаемся завершения Future
+    if (result.items != null) {
+      mapObjects.clear(); // Очищаем старые метки
+      for (var item in result.items!) {
+        // Проходим по каждому результату
+        if (item.toponymMetadata != null) {
+          placeMarker = PlacemarkMapObject(
+            mapId: MapObjectId(
+                item.businessMetadata!.address.formattedAddress ??
+                    'marker_${item.hashCode}'),
+            point: item.geometry.first.point!,
+            icon: PlacemarkIcon.single(PlacemarkIconStyle(
+              scale: 0.5,
+              image: BitmapDescriptor.fromAssetImage('assets/placemark.png'),
+            )),
+          );
+          mapObjects.add(placeMarker); // Добавляем метку на карту
+          setState(() {}); // Обновляем карту
+        }
+      }
+    }
   }
 
   void _showOrganizationDetails(SearchItemBusinessMetadata? metadata) {
@@ -108,34 +136,34 @@ class _MapScreenState extends State<MapScreen> {
 
   void _showSearchResults(Future<SearchSessionResult> searchResults) {
     searchResults.then((result) {
-      showDialog(
+      showModalBottomSheet(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text("Search Results for '${searchController.text}'"),
-          content: SizedBox(
-            height: 300,
-            width: 300,
+        isScrollControlled: true, // окно на всю высоту
+        backgroundColor: Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => DraggableScrollableSheet(
+          expand: false,
+          builder: (context, scrollController) => Padding(
+            padding: const EdgeInsets.all(20),
             child: ListView.builder(
+              controller: scrollController,
               itemCount: result.items?.length ?? 0,
               itemBuilder: (context, index) {
                 final item = result.items![index];
                 return ListTile(
                   title: Text(item.businessMetadata!.name),
+                  subtitle:
+                      Text(item.businessMetadata!.address.formattedAddress),
                   onTap: () {
                     _moveToResultLocation(item.geometry.first.point!);
                     Navigator.of(context).pop();
-                    _showOrganizationDetails(item.businessMetadata);
                   },
                 );
               },
             ),
           ),
-          actions: [
-            TextButton(
-              child: const Text('Close'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
         ),
       );
     });
@@ -148,20 +176,20 @@ class _MapScreenState extends State<MapScreen> {
     await _fetchCurrentLocation();
   }
 
-  void addMark({required Point point}) {
-    final onTapLocation = PlacemarkMapObject(
-      opacity: 1,
-      mapId: const MapObjectId('onTapLocation'),
-      point: point,
-      icon: PlacemarkIcon.single(PlacemarkIconStyle(
-        scale: 0.3,
-        image: BitmapDescriptor.fromAssetImage('assets/placemark.png'),
-        rotationType: RotationType.noRotation,
-      )),
-    );
-    mapObjects.add(onTapLocation);
-    setState(() {});
-  }
+  // void addMark({required Point point}) {
+  //   final onTapLocation = PlacemarkMapObject(
+  //     opacity: 1,
+  //     mapId: const MapObjectId('onTapLocation'),
+  //     point: point,
+  //     icon: PlacemarkIcon.single(PlacemarkIconStyle(
+  //       scale: 0.3,
+  //       image: BitmapDescriptor.fromAssetImage('assets/placemark.png'),
+  //       rotationType: RotationType.noRotation,
+  //     )),
+  //   );
+  //   mapObjects.add(onTapLocation);
+  //   setState(() {});
+  // }
 
   Future<void> _moveToResultLocation(Point point) async {
     final controller = await mapControllerCompleter.future;
@@ -194,9 +222,9 @@ class _MapScreenState extends State<MapScreen> {
                   .height, // Ограничиваем высоту карты
               child: YandexMap(
                 mapObjects: mapObjects,
-                onMapTap: (argument) {
-                  addMark(point: argument);
-                },
+                // onMapTap: (argument) {
+                //   addMark(point: argument);
+                // },
                 onMapCreated: (controller) {
                   mapControllerCompleter.complete(controller);
                 },
@@ -206,30 +234,57 @@ class _MapScreenState extends State<MapScreen> {
             //buildPlaceList(places),
             Padding(
               padding: const EdgeInsets.fromLTRB(20.0, 50, 20, 0),
-              child: TextFormField(
-                controller: searchController,
-                style: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.w500),
-                decoration: InputDecoration(
-                  labelText: S.of(context).search,
-                  labelStyle: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w500),
-                  suffixIcon: const Icon(
-                    Icons.search,
-                    color: Colors.white,
+              child: ClipRect(
+                // Ограничивает область размытия
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(
+                      sigmaX: 10.0, sigmaY: 10.0, tileMode: TileMode.decal),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          style: BorderStyle.solid,
+                          width: 2,
+                          color: Colors.white),
+                      color: themeProvider.theme.primaryColorLight
+                          .withOpacity(0.3),
+                    ),
+                    // Полупрозрачный фон
+                    child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: TextFormField(
+                        controller: searchController,
+                        style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.w500),
+                        decoration: InputDecoration(
+                          labelText: S.of(context).search,
+                          labelStyle: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900),
+                          suffixIcon: const Icon(
+                            Icons.search,
+                            color: Colors.white,
+                          ),
+                          border: const UnderlineInputBorder(
+                            borderSide:
+                                BorderSide(color: Colors.white, width: 3),
+                          ),
+                          focusedBorder: const UnderlineInputBorder(
+                            borderSide:
+                                BorderSide(color: Colors.white, width: 3),
+                          ),
+                          enabledBorder: const UnderlineInputBorder(
+                            borderSide:
+                                BorderSide(color: Colors.white, width: 3),
+                          ),
+                          floatingLabelBehavior: FloatingLabelBehavior.auto,
+                        ),
+                        cursorColor: Colors.white,
+                      ),
+                    ),
                   ),
-                  border: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white, width: 3),
-                  ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white, width: 3),
-                  ),
-                  enabledBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white, width: 3),
-                  ),
-                  floatingLabelBehavior: FloatingLabelBehavior.auto,
                 ),
-                cursorColor: Colors.white,
               ),
             ),
           ],
