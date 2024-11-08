@@ -14,6 +14,17 @@ final ThemeData darkTheme = ThemeData(
           foregroundColor: Colors.black,
           textStyle: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
     ),
+    inputDecorationTheme: InputDecorationTheme(
+      labelStyle: TextStyle(
+          color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900),
+      suffixIconColor: Colors.white,
+      border: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.white, width: 3)),
+      focusedBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.white, width: 3)),
+      enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.white, width: 3)),
+    ),
     textTheme: TextTheme(
         // bodyText1: TextStyle(color: Colors.white, fontSize: 16),
         // bodyText2: TextStyle(color: Colors.grey[300]),

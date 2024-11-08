@@ -19,7 +19,7 @@ class _MapScreenState extends State<MapScreen> {
   final mapControllerCompleter = Completer<YandexMapController>();
   List<MapObject> mapObjects = [];
   TextEditingController searchController = TextEditingController();
-  final List<SearchSessionResult> results = [];
+  //final List<SearchSessionResult> results = [];
 
   Future<void> _fetchCurrentLocation() async {
     AppLatLong location;
@@ -79,28 +79,29 @@ class _MapScreenState extends State<MapScreen> {
     );
 
     _showSearchResults(resultWithSession.$2);
-    _displaySearchResultsOnMap(resultWithSession.$2);
+    //_displaySearchResultsOnMap(resultWithSession.$2);
+    setState(() {});
   }
 
   Future<void> _displaySearchResultsOnMap(
       Future<SearchSessionResult> futureResult) async {
     final result = await futureResult;
-    var placeMarker; // Дожидаемся завершения Future
+    //var placeMarker; // Дожидаемся завершения Future
+
     if (result.items != null) {
       mapObjects.clear(); // Очищаем старые метки
       for (var item in result.items!) {
         // Проходим по каждому результату
-        if (item.toponymMetadata != null) {
-          placeMarker = PlacemarkMapObject(
-            mapId: MapObjectId(
-                item.businessMetadata!.address.formattedAddress ??
-                    'marker_${item.hashCode}'),
+        if (item.businessMetadata != null) {
+          var placeMarker = PlacemarkMapObject(
+            mapId: MapObjectId(item.businessMetadata!.name),
             point: item.geometry.first.point!,
             icon: PlacemarkIcon.single(PlacemarkIconStyle(
-              scale: 0.5,
-              image: BitmapDescriptor.fromAssetImage('assets/placemark.png'),
+              scale: 0.3,
+              image: BitmapDescriptor.fromAssetImage('assets/circle.png'),
             )),
           );
+          print(placeMarker.mapId);
           mapObjects.add(placeMarker); // Добавляем метку на карту
           setState(() {}); // Обновляем карту
         }
@@ -108,38 +109,35 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  void _showOrganizationDetails(SearchItemBusinessMetadata? metadata) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(metadata?.name ?? "Организация"),
-          content: Column(
-            children: [
-              if (metadata?.address.formattedAddress != null)
-                Text("Адрес: ${metadata?.address.formattedAddress}"),
-              // if (metadata.description != null)
-              //   Text("Описание: ${metadata.description}"),
-              // Добавьте виджет Image.network() для показа фото, если URL доступен
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Закрыть"),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // void _showOrganizationDetails(SearchItemBusinessMetadata? metadata) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) {
+  //       return AlertDialog(
+  //         title: Text(metadata?.name ?? "Организация"),
+  //         content: Column(
+  //           children: [
+  //             if (metadata?.address.formattedAddress != null)
+  //               Text("Адрес: ${metadata?.address.formattedAddress}"),
+  //           ],
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () => Navigator.pop(context),
+  //             child: Text("Закрыть"),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   void _showSearchResults(Future<SearchSessionResult> searchResults) {
     searchResults.then((result) {
       showModalBottomSheet(
         context: context,
         isScrollControlled: true, // окно на всю высоту
-        backgroundColor: Colors.white,
+
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
@@ -158,6 +156,9 @@ class _MapScreenState extends State<MapScreen> {
                       Text(item.businessMetadata!.address.formattedAddress),
                   onTap: () {
                     _moveToResultLocation(item.geometry.first.point!);
+                    _displaySearchResultsOnMap(searchResults);
+                    setState(() {});
+                    print(item.geometry.first.point!);
                     Navigator.of(context).pop();
                   },
                 );
@@ -166,6 +167,8 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ),
       );
+
+      setState(() {});
     });
   }
 
@@ -232,69 +235,119 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
             //buildPlaceList(places),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20.0, 50, 20, 0),
-              child: ClipRect(
-                // Ограничивает область размытия
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(
-                      sigmaX: 10.0, sigmaY: 10.0, tileMode: TileMode.decal),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          style: BorderStyle.solid,
-                          width: 2,
-                          color: Colors.white),
-                      color: themeProvider.theme.primaryColorLight
-                          .withOpacity(0.3),
-                    ),
-                    // Полупрозрачный фон
-                    child: Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: TextFormField(
-                        controller: searchController,
-                        style: const TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.w500),
-                        decoration: InputDecoration(
-                          labelText: S.of(context).search,
-                          labelStyle: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900),
-                          suffixIcon: const Icon(
-                            Icons.search,
-                            color: Colors.white,
-                          ),
-                          border: const UnderlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 3),
-                          ),
-                          focusedBorder: const UnderlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 3),
-                          ),
-                          enabledBorder: const UnderlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.white, width: 3),
-                          ),
-                          floatingLabelBehavior: FloatingLabelBehavior.auto,
-                        ),
-                        cursorColor: Colors.white,
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 50, 20, 0),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.popAndPushNamed(context, '/');
+                    },
+                    child: Container(
+                      alignment: Alignment.topRight,
+                      child: Image.asset(
+                        'assets/minilogo.png',
+                        scale: 2,
                       ),
                     ),
                   ),
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: ClipRect(
+                    // Ограничивает область размытия
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(
+                          sigmaX: 10.0, sigmaY: 10.0, tileMode: TileMode.decal),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                              style: BorderStyle.solid,
+                              width: 2,
+                              color: Colors.white),
+                          color: themeProvider.theme.primaryColorLight
+                              .withOpacity(0.3),
+                        ),
+                        // Полупрозрачный фон
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: TextFormField(
+                            controller: searchController,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 24,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: S.of(context).search,
+                              hintStyle: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                              ),
+                              suffixIcon: IconButton(
+                                style: ButtonStyle(
+                                  shape: MaterialStateProperty.all<
+                                      RoundedRectangleBorder>(
+                                    RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          20), // Радиус скругления
+                                    ),
+                                  ),
+                                  side: MaterialStateProperty.all<BorderSide>(
+                                    BorderSide(
+                                      color: Colors.white, // Цвет границы
+                                      width: 3, // Толщина границы
+                                    ),
+                                  ),
+                                  padding:
+                                      MaterialStateProperty.all<EdgeInsets>(
+                                    EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 10), // Внутренний отступ
+                                  ),
+                                ),
+                                onPressed: () {
+                                  _search();
+                                },
+                                icon: Icon(Icons.search),
+                                color: Colors.white,
+                              ),
+                              border: const UnderlineInputBorder(
+                                borderSide:
+                                    BorderSide(color: Colors.white, width: 3),
+                              ),
+                              focusedBorder: const UnderlineInputBorder(
+                                borderSide:
+                                    BorderSide(color: Colors.white, width: 3),
+                              ),
+                              enabledBorder: const UnderlineInputBorder(
+                                borderSide:
+                                    BorderSide(color: Colors.white, width: 3),
+                              ),
+                              floatingLabelBehavior: FloatingLabelBehavior.auto,
+                            ),
+                            cursorColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Color.fromRGBO(148, 185, 255, 1),
+        child: Icon(
+          Icons.place_outlined,
+          size: 40,
+        ),
         onPressed: () {
-          //authService.logOut();
-          //String category = 'cafe';
-          _search();
+          _initPermission();
         },
       ),
     );
