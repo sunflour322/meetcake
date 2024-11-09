@@ -12,5 +12,6 @@
   "chooseAnotherName": "Имя занято!",
   "email": "Email",
   "registration": "Регистрация",
-  "search": "Поиск"
+  "search": "Поиск...",
+  "noMeetings": "нет встреч..("
 }

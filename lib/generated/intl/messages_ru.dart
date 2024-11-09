@@ -35,10 +35,11 @@ class MessageLookup extends MessageLookupByLibrary {
         "logIn": MessageLookupByLibrary.simpleMessage("Войти"),
         "login": MessageLookupByLibrary.simpleMessage("Авторизация"),
         "name": MessageLookupByLibrary.simpleMessage("Имя пользователя"),
+        "noMeetings": MessageLookupByLibrary.simpleMessage("нет встреч..("),
         "password": MessageLookupByLibrary.simpleMessage("Пароль"),
         "register": MessageLookupByLibrary.simpleMessage("Зарегистрироваться"),
         "registration": MessageLookupByLibrary.simpleMessage("Регистрация"),
-        "search": MessageLookupByLibrary.simpleMessage("Поиск"),
+        "search": MessageLookupByLibrary.simpleMessage("Поиск..."),
         "success": MessageLookupByLibrary.simpleMessage("Успешно")
       };
 }

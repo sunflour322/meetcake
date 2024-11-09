@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:meetcake/generated/l10n.dart';
+import 'package:meetcake/pages/meet_create.dart';
 import 'package:meetcake/user_service/service.dart';
 import 'package:provider/provider.dart';
 import 'package:yandex_mapkit/yandex_mapkit.dart';
@@ -18,8 +19,10 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   final mapControllerCompleter = Completer<YandexMapController>();
   List<MapObject> mapObjects = [];
+  //MeetsCRUD _meetsCRUD = MeetsCRUD();
   TextEditingController searchController = TextEditingController();
-  //final List<SearchSessionResult> results = [];
+
+  List<SearchItem> searchResults = [];
 
   Future<void> _fetchCurrentLocation() async {
     AppLatLong location;
@@ -73,40 +76,21 @@ class _MapScreenState extends State<MapScreen> {
         ),
       ),
       searchOptions: const SearchOptions(
-        searchType: SearchType.biz, // Focus on business locations
+        searchType: SearchType.biz,
         geometry: false,
       ),
     );
 
-    _showSearchResults(resultWithSession.$2);
-    //_displaySearchResultsOnMap(resultWithSession.$2);
-    setState(() {});
+    final result = await resultWithSession.$2;
+    setState(() {
+      searchResults = result.items ?? [];
+    });
   }
 
-  Future<void> _displaySearchResultsOnMap(
-      Future<SearchSessionResult> futureResult) async {
-    final result = await futureResult;
-    //var placeMarker; // Дожидаемся завершения Future
-
-    if (result.items != null) {
-      mapObjects.clear(); // Очищаем старые метки
-      for (var item in result.items!) {
-        // Проходим по каждому результату
-        if (item.businessMetadata != null) {
-          var placeMarker = PlacemarkMapObject(
-            mapId: MapObjectId(item.businessMetadata!.name),
-            point: item.geometry.first.point!,
-            icon: PlacemarkIcon.single(PlacemarkIconStyle(
-              scale: 0.3,
-              image: BitmapDescriptor.fromAssetImage('assets/circle.png'),
-            )),
-          );
-          print(placeMarker.mapId);
-          mapObjects.add(placeMarker); // Добавляем метку на карту
-          setState(() {}); // Обновляем карту
-        }
-      }
-    }
+  void _clearSearch() {
+    setState(() {
+      searchResults = [];
+    });
   }
 
   // void _showOrganizationDetails(SearchItemBusinessMetadata? metadata) {
@@ -132,44 +116,28 @@ class _MapScreenState extends State<MapScreen> {
   //   );
   // }
 
-  void _showSearchResults(Future<SearchSessionResult> searchResults) {
-    searchResults.then((result) {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true, // окно на всю высоту
+  Future<void> _displaySelectedPlaceOnMap(SearchItem selectedItem) async {
+    // Clear any previous search markers
+    mapObjects
+        .removeWhere((mapObject) => mapObject.mapId.value == 'selectedPlace');
 
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (context) => DraggableScrollableSheet(
-          expand: false,
-          builder: (context, scrollController) => Padding(
-            padding: const EdgeInsets.all(20),
-            child: ListView.builder(
-              controller: scrollController,
-              itemCount: result.items?.length ?? 0,
-              itemBuilder: (context, index) {
-                final item = result.items![index];
-                return ListTile(
-                  title: Text(item.businessMetadata!.name),
-                  subtitle:
-                      Text(item.businessMetadata!.address.formattedAddress),
-                  onTap: () {
-                    _moveToResultLocation(item.geometry.first.point!);
-                    _displaySearchResultsOnMap(searchResults);
-                    setState(() {});
-                    print(item.geometry.first.point!);
-                    Navigator.of(context).pop();
-                  },
-                );
-              },
-            ),
-          ),
-        ),
-      );
+    // Add a marker for the selected place
+    final placeMarker = PlacemarkMapObject(
+      mapId: const MapObjectId('selectedPlace'),
+      point: selectedItem.geometry.first.point!,
+      icon: PlacemarkIcon.single(PlacemarkIconStyle(
+        scale: 0.3,
+        image: BitmapDescriptor.fromAssetImage(
+            'assets/circle.png'), // Customize the icon if needed
+        rotationType: RotationType.noRotation,
+      )),
+    );
 
-      setState(() {});
-    });
+    mapObjects.add(placeMarker); // Add the marker to the map
+    setState(() {});
+
+    // Move camera to the selected location
+    await _moveToResultLocation(selectedItem.geometry.first.point!);
   }
 
   Future<void> _initPermission() async {
@@ -179,20 +147,28 @@ class _MapScreenState extends State<MapScreen> {
     await _fetchCurrentLocation();
   }
 
-  // void addMark({required Point point}) {
-  //   final onTapLocation = PlacemarkMapObject(
-  //     opacity: 1,
-  //     mapId: const MapObjectId('onTapLocation'),
-  //     point: point,
-  //     icon: PlacemarkIcon.single(PlacemarkIconStyle(
-  //       scale: 0.3,
-  //       image: BitmapDescriptor.fromAssetImage('assets/placemark.png'),
-  //       rotationType: RotationType.noRotation,
-  //     )),
-  //   );
-  //   mapObjects.add(onTapLocation);
-  //   setState(() {});
-  // }
+  void addMark({required Point point}) {
+    final onTapLocation = PlacemarkMapObject(
+      opacity: 1,
+      mapId: const MapObjectId('onTapLocation'),
+      point: point,
+      icon: PlacemarkIcon.single(PlacemarkIconStyle(
+        scale: 0.3,
+        image: BitmapDescriptor.fromAssetImage('assets/placemark.png'),
+        rotationType: RotationType.noRotation,
+      )),
+    );
+    //_meetsCRUD.addMeet(name, lat, long, usersID)
+    print(point);
+    mapObjects.add(onTapLocation);
+    setState(() {});
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MeetCreatePage(point: point),
+      ),
+    );
+  }
 
   Future<void> _moveToResultLocation(Point point) async {
     final controller = await mapControllerCompleter.future;
@@ -217,31 +193,37 @@ class _MapScreenState extends State<MapScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       body: SingleChildScrollView(
-        child: Stack(
-          children: [
-            Container(
-              height: MediaQuery.of(context)
-                  .size
-                  .height, // Ограничиваем высоту карты
-              child: YandexMap(
-                mapObjects: mapObjects,
-                // onMapTap: (argument) {
-                //   addMark(point: argument);
-                // },
-                onMapCreated: (controller) {
-                  mapControllerCompleter.complete(controller);
-                },
-                nightModeEnabled: themeProvider.returnBoolTheme(),
-              ),
+          child: Stack(
+        children: [
+          Container(
+            height:
+                MediaQuery.of(context).size.height, // Ограничиваем высоту карты
+            child: YandexMap(
+              mapObjects: mapObjects,
+              // onMapTap: (argument) {
+              //   addMark(point: argument);
+              // },
+              onMapLongTap: (argument) {
+                addMark(point: argument);
+              },
+              onMapCreated: (controller) {
+                mapControllerCompleter.complete(controller);
+              },
+              nightModeEnabled: themeProvider.returnBoolTheme(),
             ),
-            //buildPlaceList(places),
-            Column(
+          ),
+          //buildPlaceList(places),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Column(
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(0, 50, 20, 0),
                   child: GestureDetector(
                     onTap: () {
-                      Navigator.popAndPushNamed(context, '/');
+                      Navigator.popAndPushNamed(context, '/meets');
                     },
                     child: Container(
                       alignment: Alignment.topRight,
@@ -273,6 +255,9 @@ class _MapScreenState extends State<MapScreen> {
                         child: Padding(
                           padding: const EdgeInsets.all(10.0),
                           child: TextFormField(
+                            onChanged: (value) {
+                              _search();
+                            },
                             controller: searchController,
                             style: const TextStyle(
                               color: Colors.white,
@@ -335,11 +320,42 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                   ),
                 ),
+                if (searchResults.isNotEmpty)
+                  Container(
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            style: BorderStyle.solid,
+                            width: 2,
+                            color: Colors.white),
+                        color: themeProvider.theme.primaryColor),
+                    height: MediaQuery.of(context).size.height,
+                    child: ListView.builder(
+                      itemCount: searchResults.length,
+                      itemBuilder: (context, index) {
+                        final item = searchResults[index];
+                        return ListTile(
+                          title: Text(item.businessMetadata?.name ?? '',
+                              style: TextStyle(color: Colors.white)),
+                          subtitle: Text(
+                            item.businessMetadata?.address.formattedAddress ??
+                                '',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          onTap: () {
+                            _moveToResultLocation(item.geometry.first.point!);
+                            _displaySelectedPlaceOnMap(item);
+                            _clearSearch();
+                          },
+                        );
+                      },
+                    ),
+                  ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
+        ],
+      )),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Color.fromRGBO(148, 185, 255, 1),
         child: Icon(
@@ -347,7 +363,8 @@ class _MapScreenState extends State<MapScreen> {
           size: 40,
         ),
         onPressed: () {
-          _initPermission();
+          authService.logOut();
+          //_initPermission();
         },
       ),
     );

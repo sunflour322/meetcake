@@ -180,11 +180,21 @@ class S {
     );
   }
 
-  /// `Search`
+  /// `Search...`
   String get search {
     return Intl.message(
-      'Search',
+      'Search...',
       name: 'search',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `no meetings..(`
+  String get noMeetings {
+    return Intl.message(
+      'no meetings..(',
+      name: 'noMeetings',
       desc: '',
       args: [],
     );

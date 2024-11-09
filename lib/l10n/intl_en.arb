@@ -12,5 +12,6 @@
   "chooseAnotherName": "Choose another name",
   "email": "Email",
   "registration": "Registration",
-  "search": "Search"
+  "search": "Search...",
+  "noMeetings": "no meetings..("
 }
