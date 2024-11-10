@@ -14,5 +14,8 @@
   "registration": "Регистрация",
   "search": "Поиск...",
   "noMeetings": "нет встреч..(",
-  "noOne": "никого..("
+  "noOne": "никого..(",
+  "nameMeet": "Название",
+  "time": "Время",
+  "location": "Место"
 }

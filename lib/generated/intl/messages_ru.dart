@@ -32,15 +32,18 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Заполните все поля!"),
         "haveAnAccountAuthorize": MessageLookupByLibrary.simpleMessage(
             "Уже есть аккаунт? АВТОРИЗАЦИЯ"),
+        "location": MessageLookupByLibrary.simpleMessage("Место"),
         "logIn": MessageLookupByLibrary.simpleMessage("Войти"),
         "login": MessageLookupByLibrary.simpleMessage("Авторизация"),
         "name": MessageLookupByLibrary.simpleMessage("Имя пользователя"),
+        "nameMeet": MessageLookupByLibrary.simpleMessage("Название"),
         "noMeetings": MessageLookupByLibrary.simpleMessage("нет встреч..("),
         "noOne": MessageLookupByLibrary.simpleMessage("никого..("),
         "password": MessageLookupByLibrary.simpleMessage("Пароль"),
         "register": MessageLookupByLibrary.simpleMessage("Зарегистрироваться"),
         "registration": MessageLookupByLibrary.simpleMessage("Регистрация"),
         "search": MessageLookupByLibrary.simpleMessage("Поиск..."),
-        "success": MessageLookupByLibrary.simpleMessage("Успешно")
+        "success": MessageLookupByLibrary.simpleMessage("Успешно"),
+        "time": MessageLookupByLibrary.simpleMessage("Время")
       };
 }

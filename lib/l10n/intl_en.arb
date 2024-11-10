@@ -14,5 +14,8 @@
   "registration": "Registration",
   "search": "Search...",
   "noMeetings": "no meetings..(",
-  "noOne": "no one..("
+  "noOne": "no one..(",
+  "nameMeet": "Name",
+  "time": "Time",
+  "location": "Location"
 }

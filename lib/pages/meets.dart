@@ -26,19 +26,42 @@ class _MeetPageState extends State<MeetPage> {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(
-              child: Container(
-                height: MediaQuery.of(context).size.height / 2,
-                alignment: Alignment.center,
-                child: Column(
-                  children: [
-                    Image.asset('assets/catRainbow.gif', scale: 1.5),
-                    Text(
-                      S.of(context).noMeetings,
-                      style: TextStyle(color: Colors.white, fontSize: 30),
-                    )
-                  ],
-                ),
+            return Scaffold(
+              body: Column(
+                children: [
+                  GestureDetector(
+                      onTap: () {
+                        Navigator.popAndPushNamed(context, '/acc');
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 50, 20, 50),
+                        child: Container(
+                          alignment: Alignment.topRight,
+                          child: Image.asset(
+                            'assets/minilogo.png',
+                            scale: 2,
+                          ),
+                        ),
+                      )),
+                  Center(
+                    child: Container(
+                      height: MediaQuery.of(context).size.height / 2,
+                      alignment: Alignment.center,
+                      child: Column(
+                        children: [
+                          Image.asset('assets/catRainbow.gif', scale: 1.5),
+                          Text(
+                            S.of(context).noMeetings,
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 30,
+                                fontWeight: FontWeight.bold),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ), // путь к GIF
             );
           }

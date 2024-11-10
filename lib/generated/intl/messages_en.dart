@@ -32,15 +32,18 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Fill in the fields!"),
         "haveAnAccountAuthorize":
             MessageLookupByLibrary.simpleMessage("Have an account? AUTHORIZE"),
+        "location": MessageLookupByLibrary.simpleMessage("Location"),
         "logIn": MessageLookupByLibrary.simpleMessage("Log In"),
         "login": MessageLookupByLibrary.simpleMessage("Login"),
         "name": MessageLookupByLibrary.simpleMessage("User name"),
+        "nameMeet": MessageLookupByLibrary.simpleMessage("Name"),
         "noMeetings": MessageLookupByLibrary.simpleMessage("no meetings..("),
         "noOne": MessageLookupByLibrary.simpleMessage("no one..("),
         "password": MessageLookupByLibrary.simpleMessage("Password"),
         "register": MessageLookupByLibrary.simpleMessage("Register"),
         "registration": MessageLookupByLibrary.simpleMessage("Registration"),
         "search": MessageLookupByLibrary.simpleMessage("Search..."),
-        "success": MessageLookupByLibrary.simpleMessage("Success")
+        "success": MessageLookupByLibrary.simpleMessage("Success"),
+        "time": MessageLookupByLibrary.simpleMessage("Time")
       };
 }
