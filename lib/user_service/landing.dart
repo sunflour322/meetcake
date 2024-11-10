@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meetcake/pages/auth.dart';
 import 'package:meetcake/pages/catalog.dart';
-import 'package:meetcake/pages/example.dart';
 import 'package:meetcake/user_service/model.dart';
 import 'package:provider/provider.dart';
 

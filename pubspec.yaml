@@ -71,6 +71,7 @@ flutter:
   assets:
     - assets/logo.png
     - assets/catRainbow.gif
+    - assets/utka.gif
     - assets/circle.png
     - assets/minilogo.png
     - assets/placemark.png

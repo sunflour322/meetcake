@@ -13,5 +13,6 @@
   "email": "Email",
   "registration": "Регистрация",
   "search": "Поиск...",
-  "noMeetings": "нет встреч..("
+  "noMeetings": "нет встреч..(",
+  "noOne": "никого..("
 }

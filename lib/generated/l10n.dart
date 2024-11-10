@@ -199,6 +199,16 @@ class S {
       args: [],
     );
   }
+
+  /// `no one..(`
+  String get noOne {
+    return Intl.message(
+      'no one..(',
+      name: 'noOne',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

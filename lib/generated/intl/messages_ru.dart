@@ -36,6 +36,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "login": MessageLookupByLibrary.simpleMessage("Авторизация"),
         "name": MessageLookupByLibrary.simpleMessage("Имя пользователя"),
         "noMeetings": MessageLookupByLibrary.simpleMessage("нет встреч..("),
+        "noOne": MessageLookupByLibrary.simpleMessage("никого..("),
         "password": MessageLookupByLibrary.simpleMessage("Пароль"),
         "register": MessageLookupByLibrary.simpleMessage("Зарегистрироваться"),
         "registration": MessageLookupByLibrary.simpleMessage("Регистрация"),

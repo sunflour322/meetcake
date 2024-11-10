@@ -123,10 +123,18 @@ class _MapScreenState extends State<MapScreen> {
 
     // Add a marker for the selected place
     final placeMarker = PlacemarkMapObject(
+      onTap: (mapObject, point) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MeetCreatePage(point: point),
+          ),
+        );
+      },
       mapId: const MapObjectId('selectedPlace'),
       point: selectedItem.geometry.first.point!,
       icon: PlacemarkIcon.single(PlacemarkIconStyle(
-        scale: 0.3,
+        scale: 0.2,
         image: BitmapDescriptor.fromAssetImage(
             'assets/circle.png'), // Customize the icon if needed
         rotationType: RotationType.noRotation,
@@ -149,6 +157,14 @@ class _MapScreenState extends State<MapScreen> {
 
   void addMark({required Point point}) {
     final onTapLocation = PlacemarkMapObject(
+      onTap: (mapObject, point) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MeetCreatePage(point: point),
+          ),
+        );
+      },
       opacity: 1,
       mapId: const MapObjectId('onTapLocation'),
       point: point,
@@ -162,12 +178,6 @@ class _MapScreenState extends State<MapScreen> {
     print(point);
     mapObjects.add(onTapLocation);
     setState(() {});
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MeetCreatePage(point: point),
-      ),
-    );
   }
 
   Future<void> _moveToResultLocation(Point point) async {
@@ -326,27 +336,40 @@ class _MapScreenState extends State<MapScreen> {
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                             style: BorderStyle.solid,
-                            width: 2,
+                            width: 3,
                             color: Colors.white),
-                        color: themeProvider.theme.primaryColor),
+                        color: themeProvider.theme.primaryColorDark
+                            .withOpacity(0.6)),
                     height: MediaQuery.of(context).size.height,
                     child: ListView.builder(
                       itemCount: searchResults.length,
                       itemBuilder: (context, index) {
                         final item = searchResults[index];
-                        return ListTile(
-                          title: Text(item.businessMetadata?.name ?? '',
-                              style: TextStyle(color: Colors.white)),
-                          subtitle: Text(
-                            item.businessMetadata?.address.formattedAddress ??
-                                '',
-                            style: TextStyle(color: Colors.white),
+                        return Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                                style: BorderStyle.solid,
+                                width: 2,
+                                color: themeProvider.theme.primaryColorLight
+                                    .withOpacity(0.3)),
                           ),
-                          onTap: () {
-                            _moveToResultLocation(item.geometry.first.point!);
-                            _displaySelectedPlaceOnMap(item);
-                            _clearSearch();
-                          },
+                          child: ListTile(
+                            titleAlignment: ListTileTitleAlignment.center,
+                            leading: Icon(Icons.zoom_in),
+                            title: Text(item.businessMetadata?.name ?? '',
+                                style: TextStyle(color: Colors.white)),
+                            subtitle: Text(
+                              item.businessMetadata?.address.formattedAddress ??
+                                  '',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            onTap: () {
+                              _moveToResultLocation(item.geometry.first.point!);
+                              _displaySelectedPlaceOnMap(item);
+                              _clearSearch();
+                            },
+                          ),
                         );
                       },
                     ),
