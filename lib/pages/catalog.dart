@@ -21,7 +21,7 @@ class _MapScreenState extends State<MapScreen> {
   List<MapObject> mapObjects = [];
   //MeetsCRUD _meetsCRUD = MeetsCRUD();
   TextEditingController searchController = TextEditingController();
-
+  SearchItem? selectedMapObjectName;
   List<SearchItem> searchResults = [];
 
   Future<void> _fetchCurrentLocation() async {
@@ -127,10 +127,14 @@ class _MapScreenState extends State<MapScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => MeetCreatePage(point: point),
+            builder: (context) => MeetCreatePage(
+              searchItem: selectedItem,
+              point: point,
+            ),
           ),
         );
       },
+      opacity: 1,
       mapId: const MapObjectId('selectedPlace'),
       point: selectedItem.geometry.first.point!,
       icon: PlacemarkIcon.single(PlacemarkIconStyle(
@@ -161,7 +165,10 @@ class _MapScreenState extends State<MapScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => MeetCreatePage(point: point),
+            builder: (context) => MeetCreatePage(
+              point: point,
+              searchItem: selectedMapObjectName,
+            ),
           ),
         );
       },
@@ -169,8 +176,8 @@ class _MapScreenState extends State<MapScreen> {
       mapId: const MapObjectId('onTapLocation'),
       point: point,
       icon: PlacemarkIcon.single(PlacemarkIconStyle(
-        scale: 0.3,
-        image: BitmapDescriptor.fromAssetImage('assets/placemark.png'),
+        scale: 0.2,
+        image: BitmapDescriptor.fromAssetImage('assets/circle.png'),
         rotationType: RotationType.noRotation,
       )),
     );

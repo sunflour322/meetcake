@@ -6,9 +6,10 @@ import 'package:yandex_mapkit/yandex_mapkit.dart';
 import 'package:toast/toast.dart';
 
 class MeetCreatePage extends StatefulWidget {
-  final Point point;
-
-  const MeetCreatePage({super.key, required this.point});
+  final SearchItem? searchItem;
+  final Point? point;
+  const MeetCreatePage(
+      {super.key, required this.searchItem, required this.point});
 
   @override
   State<MeetCreatePage> createState() => _MeetCreatePageState();
@@ -30,6 +31,24 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
     setState(() {
       completion = filledFields / 4;
     });
+  }
+
+  void locationControllerValue() {
+    if (widget.searchItem != null) {
+      locationController.text =
+          '${widget.searchItem!.businessMetadata!.name} (${widget.searchItem!.businessMetadata!.address.formattedAddress})';
+    } else {
+      locationController.text = widget.point!.latitude.toString() +
+          ' ' +
+          widget.point!.longitude.toString();
+    }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    locationControllerValue();
   }
 
   void addFriend() {
@@ -61,6 +80,7 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
   Widget build(BuildContext context) {
     ToastContext().init(context);
     final theme = ThemeProvider();
+
     return Scaffold(
       body: Column(
         children: [

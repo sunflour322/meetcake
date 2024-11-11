@@ -4,7 +4,7 @@ final ThemeData lightTheme = ThemeData(
   brightness: Brightness.light,
   primaryColor: Color.fromRGBO(255, 203, 203, 1),
   primaryColorLight: Colors.black,
-  primaryColorDark: Color.fromRGBO(255, 203, 203, 1),
+  primaryColorDark: Colors.black,
   scaffoldBackgroundColor: Color.fromRGBO(255, 203, 203, 1),
   appBarTheme: AppBarTheme(
     backgroundColor: Color.fromRGBO(255, 203, 203, 1),
