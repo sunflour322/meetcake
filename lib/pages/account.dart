@@ -18,7 +18,7 @@ class _FriendsPageState extends State<FriendsPage> {
   @override
   void initState() {
     super.initState();
-    userId = FirebaseAuth.instance.currentUser?.uid; // Получаем текущий userId
+    userId = FirebaseAuth.instance.currentUser?.uid;
   }
 
   @override
@@ -67,7 +67,7 @@ class _FriendsPageState extends State<FriendsPage> {
                   children: [
                     _buildSectionTitle('Ваши друзья'),
                     ...friends
-                        .map((friendId) => _buildFriendTile(friendId, true))
+                        .map((friendName) => _buildFriendTile(friendName, true))
                         .toList(),
                     _buildSectionTitle('Запросы на дружбу'),
                     ...friendRequests
@@ -94,27 +94,27 @@ class _FriendsPageState extends State<FriendsPage> {
     );
   }
 
-  Widget _buildFriendTile(String friendId, bool isFriend) {
+  Widget _buildFriendTile(String friendName, bool isFriend) {
     return ListTile(
-      title: Text(friendId),
+      title: Text(friendName),
       trailing: isFriend
           ? IconButton(
               icon: Icon(Icons.remove_circle, color: Colors.red),
               onPressed: () =>
-                  friendshipService.removeFriend(userId!, friendId),
+                  friendshipService.removeFriend(userId!, friendName),
             )
           : Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
                   icon: Icon(Icons.check, color: Colors.green),
-                  onPressed: () =>
-                      friendshipService.acceptFriendRequest(userId!, friendId),
+                  onPressed: () => friendshipService.acceptFriendRequest(
+                      userId!, friendName),
                 ),
                 IconButton(
                   icon: Icon(Icons.close, color: Colors.red),
-                  onPressed: () =>
-                      friendshipService.rejectFriendRequest(userId!, friendId),
+                  onPressed: () => friendshipService.rejectFriendRequest(
+                      userId!, friendName),
                 ),
               ],
             ),
