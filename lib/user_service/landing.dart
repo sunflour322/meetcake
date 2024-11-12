@@ -14,6 +14,6 @@ class LandingPage extends StatelessWidget {
     print(userModel);
     final bool check = userModel != null;
     print(check);
-    return check ? const MeetPage() : const AuthPage();
+    return check ? const MapScreen() : const AuthPage();
   }
 }

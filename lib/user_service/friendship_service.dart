@@ -1,65 +1,126 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:meetcake/user_service/model.dart';
 
 class FriendshipService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Метод для отправки запроса на дружбу
   Future<void> sendFriendRequest(String userId, String targetUserId) async {
+    // Получаем имена пользователей (username)
+    String userUsername = await _getUsernameById(userId);
+    String targetUserUsername = await _getUsernameById(targetUserId);
+
+    DocumentReference userDoc = _firestore.collection('users').doc(userId);
     DocumentReference targetUserDoc =
         _firestore.collection('users').doc(targetUserId);
-    await targetUserDoc.update({
-      'friendRequests': FieldValue.arrayUnion([userId])
+
+    await _firestore.runTransaction((transaction) async {
+      transaction.update(targetUserDoc, {
+        'friendRequests': FieldValue.arrayUnion([userUsername]),
+      });
+      transaction.update(userDoc, {
+        'outgoingFriendRequests': FieldValue.arrayUnion([targetUserUsername]),
+      });
     });
   }
 
-  // Метод для принятия запроса на дружбу
   Future<void> acceptFriendRequest(
       String currentUserId, String requesterId) async {
     try {
-      DocumentSnapshot requesterSnapshot =
-          await _firestore.collection('users').doc(requesterId).get();
-      DocumentSnapshot currentUserSnapshot =
-          await _firestore.collection('users').doc(currentUserId).get();
+      String currentUserUsername = await _getUsernameById(currentUserId);
+      String requesterUsername = await _getUsernameById(requesterId);
 
-      String requesterName = requesterSnapshot['username'];
-      String currentUserName = currentUserSnapshot['username'];
+      DocumentReference currentUserDoc =
+          _firestore.collection('users').doc(currentUserId);
+      DocumentReference requesterDoc =
+          _firestore.collection('users').doc(requesterId);
 
-      if (currentUserId != requesterId) {
-        // Добавляем пользователей в друзья
-        await _firestore.collection('users').doc(currentUserId).update({
-          'friends': FieldValue.arrayUnion([requesterName]),
-          'friendRequests': FieldValue.arrayRemove([requesterId]),
+      await _firestore.runTransaction((transaction) async {
+        transaction.update(currentUserDoc, {
+          'friends': FieldValue.arrayUnion([requesterUsername]),
+          'friendRequests': FieldValue.arrayRemove([requesterUsername]),
+          'outgoingFriendRequests': FieldValue.arrayRemove([requesterUsername]),
         });
-        await _firestore.collection('users').doc(requesterId).update({
-          'friends': FieldValue.arrayUnion([currentUserName])
+        transaction.update(requesterDoc, {
+          'friends': FieldValue.arrayUnion([currentUserUsername]),
+          'outgoingFriendRequests':
+              FieldValue.arrayRemove([currentUserUsername]),
         });
-      }
+      });
     } catch (e) {
       print("Ошибка при принятии заявки в друзья: $e");
     }
   }
 
-  // Метод для отклонения запроса на дружбу
   Future<void> rejectFriendRequest(String userId, String requesterId) async {
+    String userUsername = await _getUsernameById(userId);
+    String requesterUsername = await _getUsernameById(requesterId);
+
     DocumentReference userDoc = _firestore.collection('users').doc(userId);
-    await userDoc.update({
-      'friendRequests': FieldValue.arrayRemove([requesterId]),
+    DocumentReference requesterDoc =
+        _firestore.collection('users').doc(requesterId);
+
+    await _firestore.runTransaction((transaction) async {
+      transaction.update(userDoc, {
+        'friendRequests': FieldValue.arrayRemove([requesterUsername]),
+      });
+      transaction.update(requesterDoc, {
+        'outgoingFriendRequests': FieldValue.arrayRemove([userUsername]),
+      });
     });
   }
 
+  Future<void> removeFriend(
+      String userId, String username, String friendName) async {
+    try {
+      // Получаем username друга
+      String friendUsername = await _getUsernameById(friendName);
+
+      DocumentReference userDoc = _firestore.collection('users').doc(userId);
+      DocumentReference friendDoc =
+          _firestore.collection('users').doc(friendName);
+
+      await _firestore.runTransaction((transaction) async {
+        transaction.update(userDoc, {
+          'friends': FieldValue.arrayRemove([friendUsername]),
+        });
+        transaction.update(friendDoc, {
+          'friends': FieldValue.arrayRemove([username]),
+        });
+      });
+    } catch (e) {
+      print("Ошибка при удалении друга: $e");
+    }
+  }
+
+  Future<String> _getUsernameById(String userId) async {
+    DocumentSnapshot userDoc =
+        await _firestore.collection('users').doc(userId).get();
+
+    if (!userDoc.exists) {
+      throw Exception("User not found for ID: $userId");
+    }
+
+    return userDoc['username'];
+  }
+
+  // Для получения потенциальных друзей
   Future<List<Map<String, dynamic>>> fetchPotentialFriends(
       String currentUserId) async {
     DocumentSnapshot userSnapshot =
         await _firestore.collection('users').doc(currentUserId).get();
-    List<dynamic> friendsList = userSnapshot['friends'] ?? [];
-    List<dynamic> friendRequests = userSnapshot['friendRequests'] ?? [];
+    List<String> friendsList = List<String>.from(userSnapshot['friends'] ?? []);
+    List<String> friendRequests =
+        List<String>.from(userSnapshot['friendRequests'] ?? []);
+    List<String> outgoingFriendRequests =
+        List<String>.from(userSnapshot['outgoingFriendRequests'] ?? []);
 
     QuerySnapshot allUsersSnapshot = await _firestore.collection('users').get();
-    List<Map<String, dynamic>> potentialFriends = [];
 
+    List<Map<String, dynamic>> potentialFriends = [];
     for (var doc in allUsersSnapshot.docs) {
-      if (doc.id != currentUserId && !friendsList.contains(doc['username'])) {
+      if (doc.id != currentUserId &&
+          !friendsList.contains(doc['username']) &&
+          !friendRequests.contains(doc['username']) &&
+          !outgoingFriendRequests.contains(doc['username'])) {
         potentialFriends.add({
           'id': doc.id,
           'username': doc['username'],
@@ -68,20 +129,5 @@ class FriendshipService {
       }
     }
     return potentialFriends;
-  }
-
-  // Метод для удаления из друзей
-  Future<void> removeFriend(String userId, String friendId) async {
-    DocumentReference userDoc = _firestore.collection('users').doc(userId);
-    DocumentReference friendDoc = _firestore.collection('users').doc(friendId);
-
-    await _firestore.runTransaction((transaction) async {
-      transaction.update(userDoc, {
-        'friends': FieldValue.arrayRemove([friendId]),
-      });
-      transaction.update(friendDoc, {
-        'friends': FieldValue.arrayRemove([userId]),
-      });
-    });
   }
 }

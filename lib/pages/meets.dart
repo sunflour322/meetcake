@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:meetcake/database/collections/meets_collection.dart';
 import 'package:meetcake/generated/l10n.dart';
 import 'package:meetcake/user_service/service.dart';
 
@@ -12,6 +13,7 @@ class MeetPage extends StatefulWidget {
 
 class _MeetPageState extends State<MeetPage> {
   AuthService _authService = AuthService();
+  MeetsCRUD _meetsCRUD = MeetsCRUD();
   final CollectionReference meetsCollection =
       FirebaseFirestore.instance.collection('meets');
 

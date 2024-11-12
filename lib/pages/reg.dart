@@ -195,7 +195,7 @@ class _RegPageState extends State<RegPage> {
                                             S.of(context).fillInTheFields);
                                       } else {
                                         var user = await _userCRUD
-                                            .fetchUsername(nameController.text);
+                                            .fetchUserID(nameController.text);
                                         if (user != null) {
                                           Toast.show(
                                               S.of(context).chooseAnotherName);

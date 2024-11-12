@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:meetcake/user_service/friendship_service.dart';
 
 class UserListPage extends StatefulWidget {
-  UserListPage({super.key});
+  const UserListPage({super.key});
 
   @override
   State<UserListPage> createState() => _UserListPageState();
@@ -20,54 +20,33 @@ class _UserListPageState extends State<UserListPage> {
     userId = FirebaseAuth.instance.currentUser?.uid;
   }
 
-  Future<List<String>> getFriends() async {
-    DocumentSnapshot userSnapshot =
-        await FirebaseFirestore.instance.collection('users').doc(userId).get();
-
-    List<dynamic> friends = userSnapshot['friends'] ?? [];
-    return friends.cast<String>();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Добавить друзей'),
       ),
-      body: FutureBuilder<List<String>>(
-        future: getFriends(),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: friendshipService.fetchPotentialFriends(
+            userId!), // Using the filtered friends method
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return Center(child: CircularProgressIndicator());
           }
 
-          List<String> friendsList = snapshot.data!;
+          List<Map<String, dynamic>> potentialFriends = snapshot.data!;
 
-          return StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('users').snapshots(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return Center(child: CircularProgressIndicator());
-              }
-
-              List<DocumentSnapshot> users = snapshot.data!.docs;
-              return ListView(
-                children: users
-                    .where((user) =>
-                        user.id != userId &&
-                        !friendsList.contains(user['username']))
-                    .map((user) => _buildUserTile(user))
-                    .toList(),
-              );
-            },
+          return ListView(
+            children:
+                potentialFriends.map((user) => _buildUserTile(user)).toList(),
           );
         },
       ),
     );
   }
 
-  Widget _buildUserTile(DocumentSnapshot user) {
-    String userId = user.id;
+  Widget _buildUserTile(Map<String, dynamic> user) {
+    String userId = user['id'];
     String username = user['username'];
 
     return ListTile(
