@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:meetcake/generated/l10n.dart';
 import 'package:meetcake/pages/meet_create.dart';
+import 'package:meetcake/theme_lng/change_lng.dart';
 import 'package:meetcake/user_service/service.dart';
 import 'package:provider/provider.dart';
 import 'package:yandex_mapkit/yandex_mapkit.dart';
@@ -23,7 +24,7 @@ class _MapScreenState extends State<MapScreen> {
   TextEditingController searchController = TextEditingController();
   SearchItem? selectedMapObjectName;
   List<SearchItem> searchResults = [];
-
+  LocaleProvider localeProvider = LocaleProvider();
   Future<void> _fetchCurrentLocation() async {
     AppLatLong location;
     const defLocation = MoscowLocation();
@@ -75,8 +76,9 @@ class _MapScreenState extends State<MapScreen> {
           northEast: Point(latitude: 55.75, longitude: 37.61),
         ),
       ),
-      searchOptions: const SearchOptions(
+      searchOptions: SearchOptions(
         searchType: SearchType.biz,
+        origin: '${localeProvider.locale}',
         geometry: false,
       ),
     );

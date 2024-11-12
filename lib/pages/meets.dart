@@ -34,15 +34,14 @@ class _MeetPageState extends State<MeetPage> {
                         Navigator.popAndPushNamed(context, '/acc');
                       },
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 50, 20, 50),
-                        child: Container(
-                          alignment: Alignment.topRight,
-                          child: Image.asset(
-                            'assets/minilogo.png',
-                            scale: 2,
-                          ),
-                        ),
-                      )),
+                          padding: const EdgeInsets.fromLTRB(20, 50, 20, 50),
+                          child: Container(
+                            alignment: Alignment.topRight,
+                            child: Icon(
+                              Icons.manage_accounts_outlined,
+                              size: 60,
+                            ),
+                          ))),
                   Center(
                     child: Container(
                       height: MediaQuery.of(context).size.height / 2,

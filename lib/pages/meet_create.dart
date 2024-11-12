@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meetcake/generated/l10n.dart';
+import 'package:meetcake/theme_lng/change_lng.dart';
 import 'package:meetcake/theme_lng/change_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:yandex_mapkit/yandex_mapkit.dart';
@@ -17,7 +18,7 @@ class MeetCreatePage extends StatefulWidget {
 
 class _MeetCreatePageState extends State<MeetCreatePage> {
   final TextEditingController nameController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController timeController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
   List<String> friends = [];
   double completion = 0;
@@ -25,7 +26,7 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
   void updateCompletion() {
     int filledFields = 0;
     if (nameController.text.isNotEmpty) filledFields++;
-    if (descriptionController.text.isNotEmpty) filledFields++;
+    if (timeController.text.isNotEmpty) filledFields++;
     if (locationController.text.isNotEmpty) filledFields++;
     if (friends.isNotEmpty) filledFields++;
     setState(() {
@@ -33,14 +34,38 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
     });
   }
 
+  void _selectDateTime() async {
+    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      locale: localeProvider.locale,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+
+    if (pickedDate != null) {
+      TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+
+      if (pickedTime != null) {
+        final formattedDateTime =
+            '${pickedDate.year}-${pickedDate.month}-${pickedDate.day} ${pickedTime.format(context)}';
+        timeController.text = formattedDateTime;
+        updateCompletion();
+      }
+    }
+  }
+
   void locationControllerValue() {
     if (widget.searchItem != null) {
       locationController.text =
           '${widget.searchItem!.businessMetadata!.name} (${widget.searchItem!.businessMetadata!.address.formattedAddress})';
     } else {
-      locationController.text = widget.point!.latitude.toString() +
-          ' ' +
-          widget.point!.longitude.toString();
+      locationController.text =
+          '${widget.point!.latitude}   ${widget.point!.longitude}';
     }
   }
 
@@ -80,7 +105,6 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
   Widget build(BuildContext context) {
     ToastContext().init(context);
     final theme = ThemeProvider();
-
     return Scaffold(
       body: Column(
         children: [
@@ -98,15 +122,133 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
                       ),
                     ),
                   ),
-                  _buildTextField(nameController, Icons.attachment,
-                      S.of(context).nameMeet, updateCompletion),
-                  _buildTextField(
-                      descriptionController,
-                      Icons.date_range_outlined,
-                      S.of(context).time,
-                      updateCompletion),
-                  _buildTextField(locationController, Icons.location_on,
-                      S.of(context).location, updateCompletion),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.attachment,
+                          color: Colors.grey,
+                          size: 35,
+                        ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                    style: BorderStyle.solid, width: 2)),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                              child: TextField(
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    color: theme.theme.primaryColor,
+                                    fontWeight: FontWeight.bold),
+                                controller: nameController,
+                                onChanged: (text) => updateCompletion(),
+                                decoration: InputDecoration(
+                                    hintText: S.of(context).nameMeet,
+                                    hintStyle: TextStyle(
+                                        color: theme.theme.primaryColor
+                                            .withOpacity(0.5),
+                                        fontWeight: FontWeight.bold),
+                                    border: InputBorder.none),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            _selectDateTime();
+                          },
+                          child: Icon(
+                              size: 35,
+                              Icons.date_range_outlined,
+                              color: Colors.grey),
+                        ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                    style: BorderStyle.solid, width: 2)),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                              child: TextField(
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    color: theme.theme.primaryColor,
+                                    fontWeight: FontWeight.bold),
+                                controller: timeController,
+                                onChanged: (text) => updateCompletion(),
+                                decoration: InputDecoration(
+                                    hintText: S.of(context).time,
+                                    hintStyle: TextStyle(
+                                        color: theme.theme.primaryColor
+                                            .withOpacity(0.5),
+                                        fontWeight: FontWeight.bold),
+                                    border: InputBorder.none),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          color: Colors.grey,
+                          size: 35,
+                        ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                    style: BorderStyle.solid, width: 2)),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                              child: TextField(
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    color: theme.theme.primaryColor,
+                                    fontWeight: FontWeight.bold),
+                                controller: locationController,
+                                onChanged: (text) => updateCompletion(),
+                                decoration: InputDecoration(
+                                    hintText: S.of(context).location,
+                                    hintStyle: TextStyle(
+                                        color: theme.theme.primaryColor
+                                            .withOpacity(0.5),
+                                        fontWeight: FontWeight.bold),
+                                    border: InputBorder.none),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   friends.isEmpty
                       ? Center(
                           child: Column(
