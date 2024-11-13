@@ -76,13 +76,12 @@ class _FriendsPageState extends State<FriendsPage> {
                   children: [
                     _buildSectionTitle('Ваши друзья'),
                     ...friends
-                        .map((requesterId) =>
-                            _buildFriendTile(requesterId, true))
+                        .map((friendName) => _buildFriendTile(friendName, true))
                         .toList(),
                     _buildSectionTitle('Запросы на дружбу'),
                     ...friendRequests
-                        .map((requesterId) =>
-                            _buildFriendTile(requesterId, false))
+                        .map(
+                            (friendName) => _buildFriendTile(friendName, false))
                         .toList(),
                   ],
                 );
@@ -104,16 +103,20 @@ class _FriendsPageState extends State<FriendsPage> {
     );
   }
 
-  Widget _buildFriendTile(String friendId, bool isFriend) {
+  Widget _buildFriendTile(String friendName, bool isFriend) {
+    dynamic friendId;
     return ListTile(
-      title: Text(friendId), // Показываем ID, а не имя
+      title: Text(friendName), // Показываем ID, а не имя
       trailing: isFriend
           ? IconButton(
               icon: Icon(Icons.remove_circle, color: Colors.red),
-              onPressed: () {
+              onPressed: () async {
                 if (username != null) {
-                  friendshipService.removeFriend(
-                      userId!, username!, friendId); // Передаем ID
+                  friendId = await userCRUD.fetchUserID(friendName);
+                  if (friendId != null) {
+                    friendshipService.removeFriend(
+                        userId!, username!, friendId);
+                  } // Передаем ID
                 }
               },
             )
@@ -122,8 +125,12 @@ class _FriendsPageState extends State<FriendsPage> {
               children: [
                 IconButton(
                   icon: Icon(Icons.check, color: Colors.green),
-                  onPressed: () => friendshipService.acceptFriendRequest(
-                      userId!, friendId), // Передаем ID
+                  onPressed: () async {
+                    friendId = await userCRUD.fetchUserID(friendName);
+                    if (friendId != null) {
+                      friendshipService.acceptFriendRequest(userId!, friendId);
+                    }
+                  },
                 ),
                 IconButton(
                   icon: Icon(Icons.close, color: Colors.red),

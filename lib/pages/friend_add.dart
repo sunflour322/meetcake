@@ -27,8 +27,8 @@ class _UserListPageState extends State<UserListPage> {
         title: Text('Добавить друзей'),
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: friendshipService.fetchPotentialFriends(
-            userId!), // Using the filtered friends method
+        future: friendshipService.fetchPotentialFriends(userId!).whenComplete(
+            () => setState(() {})), // Using the filtered friends method
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return Center(child: CircularProgressIndicator());
@@ -52,10 +52,12 @@ class _UserListPageState extends State<UserListPage> {
     return ListTile(
       title: Text(username),
       trailing: IconButton(
-        icon: Icon(Icons.person_add, color: Colors.blue),
-        onPressed: () =>
-            friendshipService.sendFriendRequest(this.userId!, userId),
-      ),
+          icon: Icon(Icons.person_add, color: Colors.blue),
+          onPressed: () async {
+            await friendshipService
+                .sendFriendRequest(this.userId!, userId)
+                .whenComplete(() => setState(() {}));
+          }),
     );
   }
 }
