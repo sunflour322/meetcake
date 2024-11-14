@@ -1,5 +1,9 @@
+import 'dart:developer';
+
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:meetcake/generated/l10n.dart';
 import 'package:meetcake/routes.dart';
@@ -18,6 +22,7 @@ void main() async {
         projectId: 'meetcake-2aa94',
         storageBucket: 'meetcake-2aa94.appspot.com'),
   );
+
   runApp(
     MultiProvider(
       providers: [

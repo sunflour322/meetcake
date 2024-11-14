@@ -27,4 +27,15 @@ class UserCRUD {
     }
     return null;
   }
+
+  Future<DocumentSnapshot?> fetchUser() async {
+    if (userId != null) {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+      return userDoc;
+    }
+    return null;
+  }
 }
