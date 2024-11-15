@@ -30,6 +30,7 @@ class _AccountPageState extends State<AccountPage> {
   var username, email;
   String? profileImageUrl;
   int friendsCount = 0;
+  List categoriesCount = [];
   List<String> allCategories = [
     'Спорт',
     'Кино',
@@ -57,6 +58,7 @@ class _AccountPageState extends State<AccountPage> {
       });
       _fetchFriendsCount();
       _loadUserProfile();
+      fetchCategories();
     }
   }
 
@@ -117,6 +119,15 @@ class _AccountPageState extends State<AccountPage> {
     print("Categories updated in Firestore.");
   }
 
+  Future<void> fetchCategories() async {
+    String userId = _auth.currentUser!.uid;
+
+    DocumentSnapshot categories =
+        await _firestore.collection('users').doc(userId).get();
+    print("Categories updated in Firestore.");
+    categoriesCount = categories['categories'];
+  }
+
   void _showCategoriesDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -139,6 +150,7 @@ class _AccountPageState extends State<AccountPage> {
                           selectedCategories.remove(category);
                         }
                       }
+                      print(selectedCategories);
                     });
                   },
                 );
@@ -149,20 +161,19 @@ class _AccountPageState extends State<AccountPage> {
             TextButton(
               onPressed: () {
                 _saveCategories(); // Сохраняем выбранные категории
-                Navigator.of(context).pop(); // Закрываем диалог
+                fetchCategories()
+                    .whenComplete(() => setState(() {})); // Закрываем диалог
+                Navigator.of(context).pop();
               },
               child: Text('Сохранить'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Просто закрыть диалог
-              },
-              child: Text('Отменить'),
             ),
           ],
         );
       },
-    );
+    ).whenComplete(() => setState(() {
+          _saveCategories().whenComplete(
+              () => fetchCategories().whenComplete(() => setState(() {})));
+        }));
   }
 
   void _showFriendsBottomSheet(BuildContext context) {
@@ -276,7 +287,7 @@ class _AccountPageState extends State<AccountPage> {
                     await _fetchFriendsCount();
                   },
                   child: Text(
-                    'Categories: $friendsCount',
+                    'Categories: ${categoriesCount.length}',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
@@ -286,7 +297,7 @@ class _AccountPageState extends State<AccountPage> {
                           Color.fromRGBO(148, 185, 255, 1))),
                   onPressed: () async {
                     _showFriendsBottomSheet(context);
-                    await _fetchFriendsCount();
+                    await fetchCategories();
                   },
                   child: Text(
                     'Friends: $friendsCount',
