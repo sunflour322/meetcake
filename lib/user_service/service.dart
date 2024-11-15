@@ -28,7 +28,9 @@ class AuthService {
         'email': email,
         'friends': [],
         'friendRequests': [],
-        'profileImageUrl': ''
+        'outgoingFriendRequests': [],
+        'profileImageUrl': '',
+        'categories': []
       });
 
       return UserModel.fromFirebase(user);

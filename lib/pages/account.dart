@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,21 +11,36 @@ import 'package:meetcake/pages/meets.dart';
 import 'package:meetcake/user_service/friendship_service.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:http/http.dart' as http;
+import 'package:googleapis_auth/googleapis_auth.dart';
 
-class FriendsPage extends StatefulWidget {
-  const FriendsPage({super.key});
+class AccountPage extends StatefulWidget {
+  const AccountPage({super.key});
 
   @override
-  _FriendsPageState createState() => _FriendsPageState();
+  _AccountPageState createState() => _AccountPageState();
 }
 
-class _FriendsPageState extends State<FriendsPage> {
+class _AccountPageState extends State<AccountPage> {
   final FriendshipService friendshipService = FriendshipService();
   final UserCRUD userCRUD = UserCRUD();
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String? userId;
   var username, email;
   String? profileImageUrl;
   int friendsCount = 0;
+  List<String> allCategories = [
+    'Спорт',
+    'Кино',
+    'Музыка',
+    'Чтение',
+    'Природа',
+    'Путешествия',
+    'Танцы',
+    'Готовка'
+  ];
+  List<String> selectedCategories = [];
 
   @override
   void initState() {
@@ -34,10 +52,22 @@ class _FriendsPageState extends State<FriendsPage> {
           username = value?['username'];
           email = value?['email'];
           profileImageUrl = value?['profileImageUrl'];
+          selectedCategories = List<String>.from(value?['categories'] ?? []);
         });
       });
       _fetchFriendsCount();
+      _loadUserProfile();
     }
+  }
+
+  Future<void> _loadUserProfile() async {
+    String userId = _auth.currentUser!.uid;
+    DocumentSnapshot userDoc =
+        await _firestore.collection('users').doc(userId).get();
+    setState(() {
+      profileImageUrl = userDoc['profileImageUrl'];
+      selectedCategories = List<String>.from(userDoc['categories'] ?? []);
+    });
   }
 
   Future<void> _fetchFriendsCount() async {
@@ -46,6 +76,93 @@ class _FriendsPageState extends State<FriendsPage> {
     setState(() {
       friendsCount = (userDoc['friends'] as List).length;
     });
+  }
+
+  Future<void> _uploadImageToFirebase() async {
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image == null) return;
+
+    try {
+      String userId = _auth.currentUser!.uid;
+      String fileName = 'user_images/$userId/${DateTime.now()}.png';
+
+      final ref = _storage.ref().child(fileName);
+      await ref.putFile(File(image.path));
+
+      final imageUrl = await ref.getDownloadURL();
+
+      await _firestore.collection('users').doc(userId).update({
+        'profileImageUrl': imageUrl,
+      });
+
+      setState(() {
+        profileImageUrl = imageUrl;
+      });
+
+      print("Image uploaded and link saved in Firestore.");
+    } catch (e) {
+      print("Error uploading image: $e");
+    }
+  }
+
+  Future<void> _saveCategories() async {
+    String userId = _auth.currentUser!.uid;
+
+    await _firestore.collection('users').doc(userId).update({
+      'categories': selectedCategories,
+    });
+
+    print("Categories updated in Firestore.");
+  }
+
+  void _showCategoriesDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Выберите категории досуга'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: allCategories.map((category) {
+                return CheckboxListTile(
+                  title: Text(category),
+                  value: selectedCategories.contains(category),
+                  onChanged: (bool? value) {
+                    setState(() {
+                      if (value != null) {
+                        if (value) {
+                          selectedCategories.add(category);
+                        } else {
+                          selectedCategories.remove(category);
+                        }
+                      }
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                _saveCategories(); // Сохраняем выбранные категории
+                Navigator.of(context).pop(); // Закрываем диалог
+              },
+              child: Text('Сохранить'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Просто закрыть диалог
+              },
+              child: Text('Отменить'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showFriendsBottomSheet(BuildContext context) {
@@ -57,7 +174,7 @@ class _FriendsPageState extends State<FriendsPage> {
       ),
       builder: (context) => FractionallySizedBox(
         heightFactor: 0.5,
-        widthFactor: 0.95, // почти на всю высоту экрана
+        widthFactor: 0.95,
         child: StreamBuilder<DocumentSnapshot>(
           stream: FirebaseFirestore.instance
               .collection('users')
@@ -83,7 +200,8 @@ class _FriendsPageState extends State<FriendsPage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => UserListPage()),
+                        MaterialPageRoute(
+                            builder: (context) => const FriendAddPage()),
                       );
                     },
                     child: Text("Добавить друзей"),
@@ -114,43 +232,7 @@ class _FriendsPageState extends State<FriendsPage> {
           },
         ),
       ),
-    );
-  }
-
-  void _onAvatarTap() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-
-    if (image != null) {
-      final drive.File uploadedImage = await _uploadImageToGoogleDrive(image);
-      final String downloadUrl = uploadedImage.webViewLink!;
-      _saveImageUrlToFirestore(downloadUrl);
-    }
-  }
-
-// Функция загрузки фото в Google Drive
-  Future<drive.File> _uploadImageToGoogleDrive(XFile image) async {
-    final driveApi = drive.DriveApi(http.Client());
-    final drive.File fileToUpload = drive.File();
-    fileToUpload.name = image.name;
-    fileToUpload.mimeType = 'image/jpeg';
-
-    final response = await driveApi.files.create(
-      fileToUpload,
-      uploadMedia:
-          drive.Media(image.readAsBytes().asStream(), image.length as int?),
-    );
-    return response;
-  }
-
-// Функция сохранения URL в Firestore
-  void _saveImageUrlToFirestore(String url) async {
-    await FirebaseFirestore.instance.collection('users').doc(userId).update({
-      'profileImageUrl': url,
-    });
-    setState(() {
-      profileImageUrl = url;
-    });
+    ).whenComplete(() => _fetchFriendsCount());
   }
 
   @override
@@ -164,9 +246,7 @@ class _FriendsPageState extends State<FriendsPage> {
               children: [
                 SizedBox(height: 20),
                 GestureDetector(
-                  onTap: () {
-                    _onAvatarTap();
-                  },
+                  onTap: _uploadImageToFirebase, // Open gallery on tap
                   child: CircleAvatar(
                     radius: 50,
                     backgroundImage: profileImageUrl != null
@@ -179,23 +259,37 @@ class _FriendsPageState extends State<FriendsPage> {
                 ),
                 SizedBox(height: 10),
                 Text(
-                  'Имя: $username',
+                  '$username',
                   style: TextStyle(fontSize: 18),
                 ),
                 Text(
-                  'Email: $email',
+                  '$email',
                   style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
                 SizedBox(height: 20),
                 ElevatedButton(
                   style: ButtonStyle(
-                      backgroundColor: WidgetStateProperty.all(
+                      backgroundColor: MaterialStateProperty.all(
                           Color.fromRGBO(148, 185, 255, 1))),
-                  onPressed: () {
+                  onPressed: () async {
                     _showFriendsBottomSheet(context);
+                    await _fetchFriendsCount();
                   },
                   child: Text(
                     'Friends: $friendsCount',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all(
+                          Color.fromRGBO(148, 185, 255, 1))),
+                  onPressed: () async {
+                    _showCategoriesDialog(context);
+                    await _fetchFriendsCount();
+                  },
+                  child: Text(
+                    'Categories: $friendsCount',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
@@ -228,61 +322,63 @@ class _FriendsPageState extends State<FriendsPage> {
 
   Widget _buildFriendTile(String friendName, bool isFriend) {
     dynamic friendId;
+
     return ListTile(
-      title: Text(friendName),
-      trailing: isFriend
-          ? IconButton(
-              icon: Icon(Icons.remove_circle, color: Colors.red),
-              onPressed: () async {
-                if (username != null) {
-                  friendId = await userCRUD
-                      .fetchUserID(friendName)
-                      .whenComplete(() => setState(() {}));
-                  if (friendId != null) {
-                    await friendshipService
-                        .removeFriend(userId!, username!, friendId)
-                        .whenComplete(() => setState(() {}));
-                    ;
-                    await _fetchFriendsCount()
-                        .whenComplete(() => setState(() {}));
-                    ;
-                  }
-                }
-              },
-            )
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.check, color: Colors.green),
-                  onPressed: () async {
-                    friendId = await userCRUD.fetchUserID(friendName);
-                    if (friendId != null) {
-                      await friendshipService
-                          .acceptFriendRequest(userId!, friendId)
-                          .whenComplete(() => setState(() {}));
-                      ;
-                      await _fetchFriendsCount()
-                          .whenComplete(() => setState(() {}));
-                      ;
-                    }
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.close, color: Colors.red),
-                  onPressed: () async {
+        leading: FutureBuilder<String?>(
+          future: friendshipService.fetchUserImageUrl(friendName),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return CircleAvatar(
+                backgroundImage: NetworkImage(snapshot.data!),
+              );
+            } else {
+              return CircleAvatar(child: Icon(Icons.person)); // Если нет данных
+            }
+          },
+        ),
+        title: Text(friendName),
+        trailing: isFriend
+            ? IconButton(
+                icon: Icon(Icons.remove_circle, color: Colors.red),
+                onPressed: () async {
+                  if (username != null) {
                     friendId = await userCRUD
                         .fetchUserID(friendName)
                         .whenComplete(() => setState(() {}));
-                    ;
-                    await friendshipService
-                        .rejectFriendRequest(userId!, friendId)
-                        .whenComplete(() => setState(() {}));
-                    ;
-                  },
-                ),
-              ],
-            ),
-    );
+                    if (friendId != null) {
+                      await friendshipService
+                          .removeFriend(userId!, username!, friendId)
+                          .whenComplete(() => _fetchFriendsCount());
+                    }
+                  }
+                },
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.check, color: Colors.green),
+                    onPressed: () async {
+                      friendId = await userCRUD.fetchUserID(friendName);
+                      if (friendId != null) {
+                        await friendshipService
+                            .acceptFriendRequest(userId!, friendId)
+                            .whenComplete(() => _fetchFriendsCount());
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close, color: Colors.red),
+                    onPressed: () async {
+                      friendId = await userCRUD
+                          .fetchUserID(friendName)
+                          .whenComplete(() => _fetchFriendsCount());
+                      await friendshipService
+                          .rejectFriendRequest(userId!, friendId)
+                          .whenComplete(() => _fetchFriendsCount());
+                    },
+                  ),
+                ],
+              ));
   }
 }

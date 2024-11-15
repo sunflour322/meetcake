@@ -9,5 +9,5 @@ final routes = {
   '/auth': (context) => const AuthPage(),
   '/reg': (context) => const RegPage(),
   '/meets': (context) => const MeetPage(),
-  '/acc': (context) => const FriendsPage()
+  '/acc': (context) => const AccountPage()
 };

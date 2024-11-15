@@ -1,13 +1,32 @@
 {
   "project_info": {
-    "project_number": "594015453335",
-    "project_id": "meetcake-2aa94",
-    "storage_bucket": "meetcake-2aa94.appspot.com"
+    "project_number": "874539196455",
+    "project_id": "flutter-films-mukachev",
+    "storage_bucket": "flutter-films-mukachev.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:594015453335:android:6e7ca4b9b63b5d45f369d2",
+        "mobilesdk_app_id": "1:874539196455:android:e0b90b6e7b41dc1e472e02",
+        "android_client_info": {
+          "package_name": "com.example.flutter_films"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKakS4dzfbmsFSCP4NzN9eZ6SDLSeCcvo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:874539196455:android:e27850e2f154d2af472e02",
         "android_client_info": {
           "package_name": "com.example.meetcake"
         }
@@ -15,7 +34,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAZuKYGr6pQg8hJJObCNNpfN8iGrmsc4dQ"
+          "current_key": "AIzaSyBKakS4dzfbmsFSCP4NzN9eZ6SDLSeCcvo"
         }
       ],
       "services": {

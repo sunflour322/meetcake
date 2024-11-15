@@ -3,14 +3,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:meetcake/user_service/friendship_service.dart';
 
-class UserListPage extends StatefulWidget {
-  const UserListPage({super.key});
+class FriendAddPage extends StatefulWidget {
+  const FriendAddPage({super.key});
 
   @override
-  State<UserListPage> createState() => _UserListPageState();
+  State<FriendAddPage> createState() => _FriendAddPageState();
 }
 
-class _UserListPageState extends State<UserListPage> {
+class _FriendAddPageState extends State<FriendAddPage> {
   final FriendshipService friendshipService = FriendshipService();
   String? userId;
 
@@ -50,14 +50,29 @@ class _UserListPageState extends State<UserListPage> {
     String username = user['username'];
 
     return ListTile(
+      leading: FutureBuilder<String?>(
+        future: friendshipService.fetchUserImageUrl(
+            username), // Асинхронно получаем ссылку на изображение
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return CircleAvatar(
+              backgroundImage: NetworkImage(snapshot.data!),
+            );
+          } else {
+            return CircleAvatar(
+                child: Icon(Icons.person)); // Стандартный аватар
+          }
+        },
+      ),
       title: Text(username),
       trailing: IconButton(
-          icon: Icon(Icons.person_add, color: Colors.blue),
-          onPressed: () async {
-            await friendshipService
-                .sendFriendRequest(this.userId!, userId)
-                .whenComplete(() => setState(() {}));
-          }),
+        icon: Icon(Icons.person_add, color: Colors.blue),
+        onPressed: () async {
+          await friendshipService
+              .sendFriendRequest(this.userId!, userId)
+              .whenComplete(() => setState(() {}));
+        },
+      ),
     );
   }
 }

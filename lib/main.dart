@@ -16,11 +16,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: const FirebaseOptions(
-        apiKey: 'AIzaSyAZuKYGr6pQg8hJJObCNNpfN8iGrmsc4dQ',
-        appId: '1:594015453335:android:6e7ca4b9b63b5d45f369d2',
-        messagingSenderId: '594015453335',
-        projectId: 'meetcake-2aa94',
-        storageBucket: 'meetcake-2aa94.appspot.com'),
+        apiKey: 'AIzaSyBKakS4dzfbmsFSCP4NzN9eZ6SDLSeCcvo',
+        appId: '1:874539196455:android:e0b90b6e7b41dc1e472e02',
+        messagingSenderId: '874539196455',
+        projectId: 'flutter-films-mukachev',
+        storageBucket: 'flutter-films-mukachev.appspot.com'),
   );
 
   runApp(

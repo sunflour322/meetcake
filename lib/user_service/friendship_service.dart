@@ -130,4 +130,24 @@ class FriendshipService {
     }
     return potentialFriends;
   }
+
+  Future<String?> fetchUserImageUrl(String username) async {
+    try {
+      QuerySnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .where('username', isEqualTo: username)
+          .limit(1)
+          .get();
+
+      if (userDoc.docs.isNotEmpty) {
+        var friendImageUrl = userDoc.docs.first;
+        return friendImageUrl[
+            'profileImageUrl']; // Возвращаем ссылку на изображение
+      }
+      return null; // Если не найдено
+    } catch (e) {
+      print("Error fetching user image URL: $e");
+      return null;
+    }
+  }
 }
