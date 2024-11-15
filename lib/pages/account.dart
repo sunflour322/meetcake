@@ -272,11 +272,11 @@ class _AccountPageState extends State<AccountPage> {
                       backgroundColor: MaterialStateProperty.all(
                           Color.fromRGBO(148, 185, 255, 1))),
                   onPressed: () async {
-                    _showFriendsBottomSheet(context);
+                    _showCategoriesDialog(context);
                     await _fetchFriendsCount();
                   },
                   child: Text(
-                    'Friends: $friendsCount',
+                    'Categories: $friendsCount',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
@@ -285,11 +285,11 @@ class _AccountPageState extends State<AccountPage> {
                       backgroundColor: MaterialStateProperty.all(
                           Color.fromRGBO(148, 185, 255, 1))),
                   onPressed: () async {
-                    _showCategoriesDialog(context);
+                    _showFriendsBottomSheet(context);
                     await _fetchFriendsCount();
                   },
                   child: Text(
-                    'Categories: $friendsCount',
+                    'Friends: $friendsCount',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
