@@ -145,7 +145,9 @@ class _AccountPageState extends State<AccountPage> {
                     setState(() {
                       if (value != null) {
                         if (value) {
-                          selectedCategories.add(category);
+                          if (!selectedCategories.contains(category)) {
+                            selectedCategories.add(category);
+                          }
                         } else {
                           selectedCategories.remove(category);
                         }
@@ -160,9 +162,8 @@ class _AccountPageState extends State<AccountPage> {
           actions: [
             TextButton(
               onPressed: () {
-                _saveCategories(); // Сохраняем выбранные категории
-                fetchCategories()
-                    .whenComplete(() => setState(() {})); // Закрываем диалог
+                _saveCategories();
+                fetchCategories().whenComplete(() => setState(() {}));
                 Navigator.of(context).pop();
               },
               child: Text('Сохранить'),
@@ -257,7 +258,7 @@ class _AccountPageState extends State<AccountPage> {
               children: [
                 SizedBox(height: 20),
                 GestureDetector(
-                  onTap: _uploadImageToFirebase, // Open gallery on tap
+                  onTap: _uploadImageToFirebase,
                   child: CircleAvatar(
                     radius: 50,
                     backgroundImage: profileImageUrl != null
@@ -343,7 +344,7 @@ class _AccountPageState extends State<AccountPage> {
                 backgroundImage: NetworkImage(snapshot.data!),
               );
             } else {
-              return CircleAvatar(child: Icon(Icons.person)); // Если нет данных
+              return CircleAvatar(child: Icon(Icons.person));
             }
           },
         ),

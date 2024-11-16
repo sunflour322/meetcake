@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:meetcake/database/collections/meets_collection.dart';
 import 'package:meetcake/generated/l10n.dart';
 import 'package:meetcake/pages/account.dart';
-import 'package:meetcake/user_service/service.dart';
+import 'package:meetcake/user_service/user_service.dart';
 
 class MeetPage extends StatefulWidget {
   const MeetPage({super.key});

@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:meetcake/database/collections/meets_collection.dart';
 import 'package:meetcake/generated/l10n.dart';
 import 'package:meetcake/pages/meet_create.dart';
 import 'package:meetcake/theme_lng/change_lng.dart';
-import 'package:meetcake/user_service/service.dart';
+import 'package:meetcake/user_service/user_service.dart';
 import 'package:provider/provider.dart';
 import 'package:yandex_mapkit/yandex_mapkit.dart';
 import 'package:meetcake/maps/map_services/yandex_map_service.dart';
@@ -20,6 +22,8 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   final mapControllerCompleter = Completer<YandexMapController>();
   List<MapObject> mapObjects = [];
+  MeetsCRUD _meetsCRUD = MeetsCRUD();
+  String? meetId;
   //MeetsCRUD _meetsCRUD = MeetsCRUD();
   TextEditingController searchController = TextEditingController();
   SearchItem? selectedMapObjectName;
@@ -125,16 +129,21 @@ class _MapScreenState extends State<MapScreen> {
 
     // Add a marker for the selected place
     final placeMarker = PlacemarkMapObject(
-      onTap: (mapObject, point) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MeetCreatePage(
-              searchItem: selectedItem,
-              point: point,
-            ),
-          ),
-        );
+      onTap: (mapObject, point) async {
+        meetId = await _meetsCRUD
+            .addMeet(
+                point.latitude,
+                point.longitude,
+                '${selectedItem.businessMetadata?.name}' +
+                    ' (${selectedItem.businessMetadata?.address.formattedAddress})')
+            .whenComplete(() => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MeetCreatePage(
+                        searchItem: selectedItem, point: point, meetId: meetId),
+                  ),
+                ));
+        print(meetId);
       },
       opacity: 1,
       mapId: const MapObjectId('selectedPlace'),
@@ -163,16 +172,20 @@ class _MapScreenState extends State<MapScreen> {
 
   void addMark({required Point point}) {
     final onTapLocation = PlacemarkMapObject(
-      onTap: (mapObject, point) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MeetCreatePage(
-              point: point,
-              searchItem: selectedMapObjectName,
-            ),
-          ),
-        );
+      onTap: (mapObject, point) async {
+        final String? meetId2 = await _meetsCRUD
+            .addMeet(point.latitude, point.longitude, '')
+            .whenComplete(() => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MeetCreatePage(
+                      point: point,
+                      searchItem: selectedMapObjectName,
+                      meetId: meetId2,
+                    ),
+                  ),
+                ));
+        print(meetId);
       },
       opacity: 1,
       mapId: const MapObjectId('onTapLocation'),

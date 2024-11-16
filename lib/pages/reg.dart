@@ -5,7 +5,7 @@ import 'package:meetcake/database/collections/user_collection.dart';
 import 'package:meetcake/generated/l10n.dart';
 import 'package:meetcake/theme_lng/change_lng.dart';
 import 'package:meetcake/theme_lng/change_theme.dart';
-import 'package:meetcake/user_service/service.dart';
+import 'package:meetcake/user_service/user_service.dart';
 import 'package:provider/provider.dart';
 import 'package:toast/toast.dart';
 

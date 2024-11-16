@@ -1,7 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:meetcake/database/collections/user_collection.dart';
 import 'package:meetcake/generated/l10n.dart';
 import 'package:meetcake/theme_lng/change_lng.dart';
 import 'package:meetcake/theme_lng/change_theme.dart';
+import 'package:meetcake/user_service/friendship_service.dart';
 import 'package:provider/provider.dart';
 import 'package:yandex_mapkit/yandex_mapkit.dart';
 import 'package:toast/toast.dart';
@@ -9,8 +13,12 @@ import 'package:toast/toast.dart';
 class MeetCreatePage extends StatefulWidget {
   final SearchItem? searchItem;
   final Point? point;
+  final String? meetId;
   const MeetCreatePage(
-      {super.key, required this.searchItem, required this.point});
+      {super.key,
+      required this.searchItem,
+      required this.point,
+      required this.meetId});
 
   @override
   State<MeetCreatePage> createState() => _MeetCreatePageState();
@@ -20,15 +28,19 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController timeController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
-  List<String> friends = [];
+  final FriendshipService friendshipService = FriendshipService();
+  final UserCRUD userCRUD = UserCRUD();
+  String? userId;
+  var username;
   double completion = 0;
+  List<DocumentSnapshot> friendsList = []; // List to hold selected friends
 
   void updateCompletion() {
     int filledFields = 0;
     if (nameController.text.isNotEmpty) filledFields++;
     if (timeController.text.isNotEmpty) filledFields++;
     if (locationController.text.isNotEmpty) filledFields++;
-    if (friends.isNotEmpty) filledFields++;
+    if (friendsList.isNotEmpty) filledFields++;
     setState(() {
       completion = filledFields / 4;
     });
@@ -60,6 +72,7 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
   }
 
   void locationControllerValue() {
+    nameController.text = widget.meetId.toString();
     if (widget.searchItem != null) {
       locationController.text =
           '${widget.searchItem!.businessMetadata!.name} (${widget.searchItem!.businessMetadata!.address.formattedAddress})';
@@ -71,23 +84,122 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     locationControllerValue();
+    userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      userCRUD.fetchUser().then((value) {
+        setState(() {
+          username = value?['username'];
+        });
+      });
+    }
   }
 
-  void addFriend() {
-    showDialog(
+  Future<void> _fetchFriendsCount() async {
+    DocumentSnapshot userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    setState(() {
+      friendsList = userDoc['friends'];
+    });
+  }
+
+  void _showFriendsBottomSheet(BuildContext context) {
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Добавить друга"),
-        content: TextField(
-          onSubmitted: (value) {
-            setState(() {
-              friends.add(value);
-            });
-            Navigator.pop(context);
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => FractionallySizedBox(
+        heightFactor: 0.5,
+        widthFactor: 0.95,
+        child: StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Center(child: CircularProgressIndicator());
+            }
+
+            List<dynamic> friendsList = snapshot.data!['friends'] ?? [];
+            List<String> selectedFriends = List.from(friendsList);
+
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  SizedBox(height: 10),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSectionTitle('Ваши друзья'),
+                          ...friendsList.map((friendName) {
+                            bool isSelected =
+                                selectedFriends.contains(friendName);
+                            return _buildFriendTile(friendName, isSelected,
+                                (friendName) {
+                              setState(() {
+                                if (isSelected) {
+                                  selectedFriends.remove(friendName);
+                                } else {
+                                  selectedFriends.add(friendName);
+                                }
+                                friendsList = List.from(selectedFriends);
+                                updateCompletion();
+                              });
+                            });
+                          }).toList(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
           },
+        ),
+      ),
+    ).whenComplete(() => setState(() {}));
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Text(
+        title,
+        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  Widget _buildFriendTile(
+      String friendName, bool isSelected, Function(String) onSelect) {
+    return ListTile(
+      leading: FutureBuilder<String?>(
+        future: friendshipService.fetchUserImageUrl(friendName),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return CircleAvatar(
+              backgroundImage: NetworkImage(snapshot.data!),
+            );
+          } else {
+            return CircleAvatar(child: Icon(Icons.person)); // Default icon
+          }
+        },
+      ),
+      title: Text(friendName),
+      trailing: IconButton(
+        onPressed: () {
+          onSelect(friendName); // Update selection when button pressed
+        },
+        icon: Icon(
+          isSelected ? Icons.remove_circle : Icons.add_circle,
+          color: isSelected ? Colors.red : Colors.green,
         ),
       ),
     );
@@ -95,7 +207,7 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
 
   void submit() {
     if (completion == 1) {
-      // Логика принятия записи
+      // Submit logic when form is completed
     } else {
       Toast.show(S.of(context).fillInTheFields);
     }
@@ -249,7 +361,7 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
                       ],
                     ),
                   ),
-                  friends.isEmpty
+                  friendsList.isEmpty
                       ? Center(
                           child: Column(
                             children: [
@@ -261,12 +373,35 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
                             ],
                           ),
                         )
-                      : ListView.builder(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemCount: friends.length,
-                          itemBuilder: (context, index) => ListTile(
-                            title: Text(friends[index]),
+                      : Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Wrap(
+                            spacing: 100,
+                            runSpacing: 20,
+                            children:
+                                List.generate(friendsList.length, (index) {
+                              return Column(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundImage: AssetImage(
+                                        friendsList[index]['imageUrl']),
+                                    radius: 35,
+                                  ),
+                                  SizedBox(
+                                    width: 100, // Ограничение ширины текста
+                                    child: FittedBox(
+                                      fit: BoxFit
+                                          .scaleDown, // Подгонка текста к ширине
+                                      child: Text(
+                                        friendsList[index]['name'],
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: 20),
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              );
+                            }),
                           ),
                         ),
                 ],
@@ -290,7 +425,7 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
             FloatingActionButton(
               heroTag: 'addFriendButton',
               backgroundColor: Color.fromRGBO(148, 185, 255, 1),
-              onPressed: addFriend,
+              onPressed: () => _showFriendsBottomSheet(context),
               child: Icon(Icons.person_add),
             ),
             Opacity(
@@ -332,51 +467,6 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(TextEditingController controller, IconData icon,
-      String hint, VoidCallback onChanged) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: Colors.grey,
-            size: 35,
-          ),
-          SizedBox(width: 10),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(style: BorderStyle.solid, width: 2)),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                child: TextField(
-                  style: TextStyle(
-                      fontSize: 20,
-                      color: themeProvider.theme.primaryColor,
-                      fontWeight: FontWeight.bold),
-                  controller: controller,
-                  onChanged: (text) => onChanged(),
-                  decoration: InputDecoration(
-                      hintText: hint,
-                      hintStyle: TextStyle(
-                          color:
-                              themeProvider.theme.primaryColor.withOpacity(0.5),
-                          fontWeight: FontWeight.bold),
-                      border: InputBorder.none),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

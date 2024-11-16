@@ -3,17 +3,25 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class MeetsCRUD {
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
-  Future<void> addMeet(
-      String name, double lat, double long, List<String> usersID) async {
+  Future<String?> addMeet(double lat, double long, String place) async {
     try {
-      await _firebaseFirestore.collection('meets').doc().set({
-        'name': name,
+      // Используем add() для создания нового документа с автоматическим ID
+      DocumentReference newMeetRef =
+          await _firebaseFirestore.collection('meets').add({
+        'name': '',
+        'datetime': '',
+        'place': place,
         'lat': lat,
         'long': long,
-        'users': usersID,
+        'users': [],
+        'requestUsers': [],
       });
+
+      // Получаем ID только что созданного документа
+      return newMeetRef.id;
     } catch (e) {
-      return;
+      print('Error creating meet: $e');
+      return null;
     }
   }
 
