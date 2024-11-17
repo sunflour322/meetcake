@@ -163,7 +163,8 @@ class _AccountPageState extends State<AccountPage> {
             TextButton(
               onPressed: () {
                 _saveCategories();
-                fetchCategories().whenComplete(() => setState(() {}));
+                fetchCategories()
+                    .whenComplete(() => setState(() {})); // Закрываем диалог
                 Navigator.of(context).pop();
               },
               child: Text('Сохранить'),
@@ -258,7 +259,7 @@ class _AccountPageState extends State<AccountPage> {
               children: [
                 SizedBox(height: 20),
                 GestureDetector(
-                  onTap: _uploadImageToFirebase,
+                  onTap: _uploadImageToFirebase, // Open gallery on tap
                   child: CircleAvatar(
                     radius: 50,
                     backgroundImage: profileImageUrl != null
@@ -344,7 +345,7 @@ class _AccountPageState extends State<AccountPage> {
                 backgroundImage: NetworkImage(snapshot.data!),
               );
             } else {
-              return CircleAvatar(child: Icon(Icons.person));
+              return CircleAvatar(child: Icon(Icons.person)); // Если нет данных
             }
           },
         ),

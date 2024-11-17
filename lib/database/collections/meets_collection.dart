@@ -3,7 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class MeetsCRUD {
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
-  Future<String?> addMeet(double lat, double long, String place) async {
+  Future<String?> addMeet(
+      double lat, double long, String place, String username) async {
     try {
       // Используем add() для создания нового документа с автоматическим ID
       DocumentReference newMeetRef =
@@ -13,7 +14,7 @@ class MeetsCRUD {
         'place': place,
         'lat': lat,
         'long': long,
-        'users': [],
+        'users': [username],
         'requestUsers': [],
       });
 
