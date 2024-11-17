@@ -37,6 +37,7 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
   List<String> friendsList = [];
   List<dynamic> requestUsers = []; // Список друзей
   // Список выбранных друзей для приглашения
+  String selectedCategory = 'Все';
 
   void updateCompletion() {
     int filledFields = 0;
@@ -123,7 +124,7 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => FractionallySizedBox(
-        heightFactor: 0.5,
+        heightFactor: 0.75, // Увеличим высоту для удобства
         widthFactor: 0.95,
         child: StreamBuilder<DocumentSnapshot>(
           stream: FirebaseFirestore.instance
@@ -136,6 +137,20 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
             }
 
             List<dynamic> friends = snapshot.data!['friends'] ?? [];
+
+            // Список категорий
+            List<String> categories = [
+              'Все',
+              'Спорт',
+              'Кино',
+              'Музыка',
+              'Чтение',
+              'Природа',
+              'Путешествия',
+              'Танцы',
+              'Готовка'
+            ];
+
             return FutureBuilder<List<dynamic>>(
               future: fetchRequestUser(),
               builder: (context, requestSnapshot) {
@@ -144,9 +159,29 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
                 }
 
                 requestUsers = requestSnapshot.data!;
-                print(requestUsers);
+
                 return Column(
                   children: [
+                    SizedBox(height: 10),
+                    // Добавляем кнопку для выбора категории
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: DropdownButton<String>(
+                        value: selectedCategory,
+                        onChanged: (newCategory) {
+                          setState(() {
+                            selectedCategory = newCategory!;
+                          });
+                        },
+                        items: categories
+                            .map<DropdownMenuItem<String>>((category) {
+                          return DropdownMenuItem<String>(
+                            value: category,
+                            child: Text(category),
+                          );
+                        }).toList(),
+                      ),
+                    ),
                     SizedBox(height: 10),
                     Expanded(
                       child: SingleChildScrollView(
@@ -154,11 +189,47 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildSectionTitle('Ваши друзья'),
+                            // Фильтруем друзей по выбранной категории
                             ...friends.map((friendName) {
                               bool isSelected =
                                   requestUsers.contains(friendName);
-                              return _buildFriendTile(
-                                  friendName, isSelected, requestUsers);
+                              return FutureBuilder<QuerySnapshot>(
+                                future: FirebaseFirestore.instance
+                                    .collection('users')
+                                    .where('username', isEqualTo: friendName)
+                                    .limit(1)
+                                    .get(),
+                                builder: (context, friendSnapshot) {
+                                  if (!friendSnapshot.hasData) {
+                                    return Center(
+                                        child: CircularProgressIndicator());
+                                  }
+
+                                  if (friendSnapshot.data!.docs.isEmpty) {
+                                    return Container();
+                                  }
+
+                                  Map<String, dynamic> friendData =
+                                      friendSnapshot.data!.docs.first.data()
+                                          as Map<String, dynamic>;
+                                  List<dynamic> friendCategories =
+                                      friendData['categories'] ?? [];
+
+                                  // Если категория друга соответствует выбранной, показываем его
+                                  bool isCategoryMatched =
+                                      selectedCategory == 'Все' ||
+                                          friendCategories
+                                              .contains(selectedCategory);
+
+                                  print(selectedCategory);
+                                  if (isCategoryMatched) {
+                                    return _buildFriendTile(
+                                        friendName, isSelected, requestUsers);
+                                  } else {
+                                    return Container();
+                                  }
+                                },
+                              );
                             }).toList(),
                           ],
                         ),
