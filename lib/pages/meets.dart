@@ -27,6 +27,9 @@ class _MeetPageState extends State<MeetPage> {
   List<DocumentSnapshot> requestMeets = [];
   List<DocumentSnapshot> pastMeets = [];
 
+  // Флаг для отслеживания загрузки данных
+  bool isLoading = true;
+
   @override
   void initState() {
     super.initState();
@@ -38,18 +41,27 @@ class _MeetPageState extends State<MeetPage> {
         });
       });
     }
-    _loadMeets();
+    // Подписка на изменения в коллекции meets
+    _subscribeToMeetChanges();
   }
 
-  // Загружаем все встречи
-  _loadMeets() async {
-    final snapshot = await meetsCollection.get();
+  // Подписка на изменения в коллекции встреч
+  _subscribeToMeetChanges() {
+    meetsCollection.snapshots().listen((snapshot) {
+      // Когда коллекция обновляется, пересчитываем встречи
+      _loadMeetsFromSnapshot(snapshot);
+    });
+  }
+
+  // Обрабатываем изменения в коллекции встреч
+  _loadMeetsFromSnapshot(QuerySnapshot snapshot) {
     meetsList = snapshot.docs;
 
     setState(() {
       userMeets.clear();
       requestMeets.clear();
       pastMeets.clear();
+      isLoading = false; // Данные загружены, обновляем флаг
     });
 
     // Фильтруем встречи по трем категориям
@@ -67,11 +79,12 @@ class _MeetPageState extends State<MeetPage> {
       }
 
       // Проверяем, прошла ли встреча, и если да - добавляем в историю
-      // Проверяем поле datetime
       DateTime meetDate;
 
       if (meetData['datetime'] is Timestamp) {
         meetDate = (meetData['datetime'] as Timestamp).toDate();
+      } else if (meetData['datetime'] == '') {
+        meetDate = DateTime.now();
       } else if (meetData['datetime'] is String) {
         meetDate = DateTime.parse(meetData['datetime']);
       } else {
@@ -79,9 +92,9 @@ class _MeetPageState extends State<MeetPage> {
             DateTime.now(); // Если тип неожиданный, используем текущую дату
       }
 
-// Далее используйте переменную meetDate в вашем коде
-      if (meetDate.isBefore(DateTime.now())) {
-        // Если встреча прошла
+      // Проверяем, прошло ли больше 24 часов
+      if (meetDate.isBefore(DateTime.now().subtract(Duration(days: 1)))) {
+        // Если встреча прошла более 24 часов назад
         meetsCollection.doc(meetDoc.id).update({'onHistory': true});
         pastMeets.add(meetDoc);
       }
@@ -104,8 +117,6 @@ class _MeetPageState extends State<MeetPage> {
       'users': meetData['users'],
       'requestUsers': meetData['requestUsers'],
     });
-
-    _loadMeets(); // Перезагружаем встречи после принятия
   }
 
   // Метод для отклонения запроса
@@ -120,23 +131,59 @@ class _MeetPageState extends State<MeetPage> {
     await meetsCollection.doc(meetId).update({
       'requestUsers': meetData['requestUsers'],
     });
-
-    _loadMeets(); // Перезагружаем встречи после отклонения
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Список встреч, где текущий пользователь в users
-            _buildMeetList('Ваши встречи', userMeets),
-            // Список встреч, где текущий пользователь в requestUsers
-            _buildRequestMeetList('Запросы на встречи', requestMeets),
-            // Список прошедших встреч
-            _buildMeetList('Прошедшие встречи', pastMeets),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(.10, 70, 10, 0),
+          child: Column(
+            children: [
+              // Если идет загрузка, показываем индикатор загрузки
+              if (isLoading)
+                Center(
+                  child: CircularProgressIndicator(),
+                ),
+              // Если все списки пусты, показываем сообщение и картинку
+              if (!isLoading &&
+                  userMeets.isEmpty &&
+                  requestMeets.isEmpty &&
+                  pastMeets.isEmpty)
+                Center(
+                  child: Container(
+                    padding: EdgeInsets.only(top: 100),
+                    height: MediaQuery.of(context).size.height / 2,
+                    alignment: Alignment.center,
+                    child: Column(
+                      children: [
+                        Image.asset('assets/catRainbow.gif', scale: 1.5),
+                        Text(
+                          S.of(context).noMeetings,
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              // Иначе показываем списки
+              if (!isLoading &&
+                  (userMeets.isNotEmpty ||
+                      requestMeets.isNotEmpty ||
+                      pastMeets.isNotEmpty)) ...[
+                // Список встреч, где текущий пользователь в users
+                _buildMeetList('Ваши встречи', userMeets),
+                // Список встреч, где текущий пользователь в requestUsers
+                _buildMeetList('Запросы на встречи', requestMeets),
+                // Список прошедших встреч
+                _buildMeetList('Прошедшие встречи', pastMeets),
+              ],
+            ],
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
@@ -156,7 +203,7 @@ class _MeetPageState extends State<MeetPage> {
     if (meetList.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Text(title + ' нет встреч.', style: TextStyle(fontSize: 20)),
+        child: Text(title, style: TextStyle(fontSize: 20)),
       );
     }
 
@@ -166,7 +213,7 @@ class _MeetPageState extends State<MeetPage> {
           padding: const EdgeInsets.all(8.0),
           child: Text(
             title,
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
           ),
         ),
         ListView.builder(
@@ -175,22 +222,34 @@ class _MeetPageState extends State<MeetPage> {
           itemCount: meetList.length,
           itemBuilder: (context, index) {
             final meetData = meetList[index].data() as Map<String, dynamic>;
+            final userList = meetData['users'] as List<dynamic>;
+
+            // Если userList содержит имена пользователей (строки)
+            String userNames =
+                userList.isEmpty ? 'No users' : userList.join(', ');
+
             return Card(
               margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               child: ListTile(
-                title: Text(meetData['title'] ?? 'No Title'),
-                subtitle: Text(meetData['description'] ?? 'No Description'),
+                onTap: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => AccountPage()));
+                },
+                title: Text(meetData['name'] ?? 'No Title'),
+                subtitle: Text('Участники: ' + userNames),
                 trailing: meetList == requestMeets
                     ? Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
+                            color: Colors.green,
                             icon: Icon(Icons.check),
                             onPressed: () {
                               _acceptRequest(meetList[index].id);
                             },
                           ),
                           IconButton(
+                            color: Colors.red,
                             icon: Icon(Icons.cancel),
                             onPressed: () {
                               _declineRequest(meetList[index].id);
@@ -199,44 +258,6 @@ class _MeetPageState extends State<MeetPage> {
                         ],
                       )
                     : null,
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  // Виджет для списка запросов
-  Widget _buildRequestMeetList(String title, List<DocumentSnapshot> meetList) {
-    if (meetList.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Text(title + ' нет запросов.', style: TextStyle(fontSize: 20)),
-      );
-    }
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            title,
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-        ),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          itemCount: meetList.length,
-          itemBuilder: (context, index) {
-            final meetData = meetList[index].data() as Map<String, dynamic>;
-            return Card(
-              margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              child: ListTile(
-                title: Text(meetData['name'] ?? 'No Title'),
-                subtitle:
-                    Text(meetData['users'].toString() ?? 'No Description'),
               ),
             );
           },

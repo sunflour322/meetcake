@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:meetcake/database/collections/user_collection.dart';
 import 'package:meetcake/generated/l10n.dart';
+import 'package:meetcake/pages/meets.dart';
 import 'package:meetcake/theme_lng/change_lng.dart';
 import 'package:meetcake/theme_lng/change_theme.dart';
 import 'package:meetcake/user_service/friendship_service.dart';
@@ -358,6 +359,7 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
           // Добавляем в запросы всех выбранных друзей
         });
         print('успешно');
+        Navigator.popAndPushNamed(context, '/meets');
         //Toast.show(S.of(context).meetingCreated); // Показать уведомление о создании
       } else {
         //Toast.show(S.of(context).addFriendsToMeet); // Показать уведомление, что нужно добавить друзей
