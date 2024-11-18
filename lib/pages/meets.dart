@@ -5,6 +5,7 @@ import 'package:meetcake/database/collections/meets_collection.dart';
 import 'package:meetcake/database/collections/user_collection.dart';
 import 'package:meetcake/generated/l10n.dart';
 import 'package:meetcake/pages/account.dart';
+import 'package:meetcake/pages/meet_profile.dart';
 import 'package:meetcake/user_service/user_service.dart';
 
 class MeetPage extends StatefulWidget {
@@ -146,7 +147,7 @@ class _MeetPageState extends State<MeetPage> {
                 Center(
                   child: CircularProgressIndicator(),
                 ),
-              // Если все списки пусты, показываем сообщение и картинку
+              // Если все списки пусты и загрузка завершена, показываем сообщение и картинку
               if (!isLoading &&
                   userMeets.isEmpty &&
                   requestMeets.isEmpty &&
@@ -170,7 +171,7 @@ class _MeetPageState extends State<MeetPage> {
                     ),
                   ),
                 ),
-              // Иначе показываем списки
+              // Если встречи есть, показываем списки
               if (!isLoading &&
                   (userMeets.isNotEmpty ||
                       requestMeets.isNotEmpty ||
@@ -232,8 +233,11 @@ class _MeetPageState extends State<MeetPage> {
               margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               child: ListTile(
                 onTap: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => AccountPage()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              MeetProfilePage(meetData: meetData)));
                 },
                 title: Text(meetData['name'] ?? 'No Title'),
                 subtitle: Text('Участники: ' + userNames),
