@@ -141,10 +141,9 @@ class FriendshipService {
 
       if (userDoc.docs.isNotEmpty) {
         var friendImageUrl = userDoc.docs.first;
-        return friendImageUrl[
-            'profileImageUrl']; // Возвращаем ссылку на изображение
+        return friendImageUrl['profileImageUrl'];
       }
-      return null; // Если не найдено
+      return null;
     } catch (e) {
       print("Error fetching user image URL: $e");
       return null;

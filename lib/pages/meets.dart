@@ -28,9 +28,6 @@ class _MeetPageState extends State<MeetPage> {
   List<DocumentSnapshot> requestMeets = [];
   List<DocumentSnapshot> pastMeets = [];
 
-  // Флаг для отслеживания загрузки данных
-  bool isLoading = true;
-
   @override
   void initState() {
     super.initState();
@@ -42,27 +39,18 @@ class _MeetPageState extends State<MeetPage> {
         });
       });
     }
-    // Подписка на изменения в коллекции meets
-    _subscribeToMeetChanges();
+    _loadMeets();
   }
 
-  // Подписка на изменения в коллекции встреч
-  _subscribeToMeetChanges() {
-    meetsCollection.snapshots().listen((snapshot) {
-      // Когда коллекция обновляется, пересчитываем встречи
-      _loadMeetsFromSnapshot(snapshot);
-    });
-  }
-
-  // Обрабатываем изменения в коллекции встреч
-  _loadMeetsFromSnapshot(QuerySnapshot snapshot) {
+  // Загружаем все встречи
+  _loadMeets() async {
+    final snapshot = await meetsCollection.get();
     meetsList = snapshot.docs;
 
     setState(() {
       userMeets.clear();
       requestMeets.clear();
       pastMeets.clear();
-      isLoading = false; // Данные загружены, обновляем флаг
     });
 
     // Фильтруем встречи по трем категориям
@@ -84,8 +72,6 @@ class _MeetPageState extends State<MeetPage> {
 
       if (meetData['datetime'] is Timestamp) {
         meetDate = (meetData['datetime'] as Timestamp).toDate();
-      } else if (meetData['datetime'] == '') {
-        meetDate = DateTime.now();
       } else if (meetData['datetime'] is String) {
         meetDate = DateTime.parse(meetData['datetime']);
       } else {
@@ -118,6 +104,8 @@ class _MeetPageState extends State<MeetPage> {
       'users': meetData['users'],
       'requestUsers': meetData['requestUsers'],
     });
+
+    _loadMeets(); // Перезагружаем встречи после принятия
   }
 
   // Метод для отклонения запроса
@@ -132,6 +120,8 @@ class _MeetPageState extends State<MeetPage> {
     await meetsCollection.doc(meetId).update({
       'requestUsers': meetData['requestUsers'],
     });
+
+    _loadMeets(); // Перезагружаем встречи после отклонения
   }
 
   @override
@@ -139,50 +129,19 @@ class _MeetPageState extends State<MeetPage> {
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(.10, 70, 10, 0),
+          padding: const EdgeInsets.fromLTRB(.10, 50, 10, 0),
           child: Column(
             children: [
-              // Если идет загрузка, показываем индикатор загрузки
-              if (isLoading)
-                Center(
-                  child: CircularProgressIndicator(),
-                ),
-              // Если все списки пусты и загрузка завершена, показываем сообщение и картинку
-              if (!isLoading &&
-                  userMeets.isEmpty &&
-                  requestMeets.isEmpty &&
-                  pastMeets.isEmpty)
-                Center(
-                  child: Container(
-                    padding: EdgeInsets.only(top: 100),
-                    height: MediaQuery.of(context).size.height / 2,
-                    alignment: Alignment.center,
-                    child: Column(
-                      children: [
-                        Image.asset('assets/catRainbow.gif', scale: 1.5),
-                        Text(
-                          S.of(context).noMeetings,
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 30,
-                              fontWeight: FontWeight.bold),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-              // Если встречи есть, показываем списки
-              if (!isLoading &&
-                  (userMeets.isNotEmpty ||
-                      requestMeets.isNotEmpty ||
-                      pastMeets.isNotEmpty)) ...[
-                // Список встреч, где текущий пользователь в users
-                _buildMeetList('Ваши встречи', userMeets),
-                // Список встреч, где текущий пользователь в requestUsers
-                _buildMeetList('Запросы на встречи', requestMeets),
-                // Список прошедших встреч
-                _buildMeetList('Прошедшие встречи', pastMeets),
-              ],
+              // Если все списки пусты, показываем сообщение и картинку
+
+              // Иначе показываем списки
+
+              // Список встреч, где текущий пользователь в users
+              _buildMeetList('Ваши встречи', userMeets),
+              // Список встреч, где текущий пользователь в requestUsers
+              _buildMeetList('Запросы на встречи', requestMeets),
+              // Список прошедших встреч
+              _buildMeetList('Прошедшие встречи', pastMeets),
             ],
           ),
         ),

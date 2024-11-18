@@ -6,7 +6,6 @@ class MeetsCRUD {
   Future<String?> addMeet(
       double lat, double long, String place, String username) async {
     try {
-      // Используем add() для создания нового документа с автоматическим ID
       DocumentReference newMeetRef =
           await _firebaseFirestore.collection('meets').add({
         'name': '',
@@ -18,7 +17,6 @@ class MeetsCRUD {
         'requestUsers': [],
       });
 
-      // Получаем ID только что созданного документа
       return newMeetRef.id;
     } catch (e) {
       print('Error creating meet: $e');

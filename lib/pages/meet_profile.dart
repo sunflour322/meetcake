@@ -139,9 +139,15 @@ class _MeetProfilePageState extends State<MeetProfilePage> {
                     ),
                     Expanded(
                       child: ListView.builder(
-                        itemCount: 10,
+                        itemCount: 1,
                         itemBuilder: (context, index) {
-                          return ListTile(title: Text(''));
+                          return Card(
+                            color: Colors.blueGrey,
+                            child: ListTile(
+                              title: Text('ramil'),
+                              subtitle: Text('привет!'),
+                            ),
+                          );
                         },
                       ),
                     ),
