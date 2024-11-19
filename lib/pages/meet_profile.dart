@@ -1,11 +1,18 @@
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:meetcake/database/collections/user_collection.dart';
+import 'package:meetcake/pages/meets.dart';
+import 'package:meetcake/theme_lng/change_theme.dart';
+import 'package:provider/provider.dart';
 import 'package:yandex_mapkit/yandex_mapkit.dart';
 
 class MeetProfilePage extends StatefulWidget {
   final Map<String, dynamic> meetData;
-  const MeetProfilePage({super.key, required this.meetData});
+  final String meetId;
+  const MeetProfilePage(
+      {super.key, required this.meetData, required this.meetId});
 
   @override
   State<MeetProfilePage> createState() => _MeetProfilePageState();
@@ -20,6 +27,11 @@ class _MeetProfilePageState extends State<MeetProfilePage> {
   late DateTime meetDateTime;
   late Duration remainingTime;
   late Timer timer;
+  String? username;
+  UserCRUD _userCRUD = UserCRUD();
+  final TextEditingController messageController = TextEditingController();
+
+  bool isMeetOver = false; // Флаг завершения встречи
   final Completer<YandexMapController> mapControllerCompleter =
       Completer<YandexMapController>();
 
@@ -33,26 +45,59 @@ class _MeetProfilePageState extends State<MeetProfilePage> {
     meetName = widget.meetData['name'];
     datetime = widget.meetData['datetime'];
     users = widget.meetData['users'];
+    var userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      _userCRUD.fetchUser().then((value) {
+        setState(() {
+          username = value?['username'];
+        });
+      });
+    }
+    try {
+      meetDateTime = DateTime.parse(widget.meetData['datetime']);
+    } catch (e) {
+      print("Ошибка парсинга даты: $e");
+      meetDateTime = DateTime.now(); // Установите текущую дату как резерв
+    }
 
-    meetDateTime = DateTime.parse(widget.meetData['datetime']);
     remainingTime = meetDateTime.difference(DateTime.now());
-
-    // Запускаем таймер для обновления оставшегося времени каждую секунду
+    isMeetOver = remainingTime.isNegative; // Устанавливаем флаг при старте
     timer = Timer.periodic(Duration(seconds: 1), _updateRemainingTime);
   }
 
   @override
   void dispose() {
-    // Останавливаем таймер при выходе со страницы
     timer.cancel();
     super.dispose();
   }
 
+  void _sendMessage() async {
+    if (messageController.text.trim().isEmpty) return;
+
+    final message = {
+      'sender': '$username', // Замените на идентификатор текущего пользователя
+      'text': messageController.text.trim(),
+      'timestamp': FieldValue.serverTimestamp(),
+    };
+
+    await FirebaseFirestore.instance
+        .collection('meets')
+        .doc(widget.meetId)
+        .collection('messages')
+        .add(message);
+
+    messageController.clear();
+  }
+
   void _updateRemainingTime(Timer timer) {
+    if (isMeetOver) return; // Не обновляем состояние, если встреча завершена
+
     setState(() {
       remainingTime = meetDateTime.difference(DateTime.now());
+
       if (remainingTime.isNegative) {
         remainingTime = Duration.zero;
+        isMeetOver = true; // Устанавливаем флаг
         timer.cancel();
       }
     });
@@ -60,133 +105,224 @@ class _MeetProfilePageState extends State<MeetProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     String formattedTime = _formatDuration(remainingTime);
 
     return Scaffold(
-      appBar: AppBar(title: Text(meetName)),
-      body: Column(
-        children: [
-          SizedBox(height: 10),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // Основной контент страницы
+            Column(
+              children: [
+                SizedBox(height: 10),
 
-          // Верхняя треть экрана: Информация о встрече
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.av_timer_outlined, size: 60),
-              Text(formattedTime, style: TextStyle(fontSize: 20))
-            ],
-          ),
-          SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(
-                          Color.fromRGBO(148, 185, 255, 1))),
-                  onPressed: () {
-                    _showMapDialog(context);
-                  },
-                  child: Icon(Icons.map_outlined, color: Colors.white),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(
-                          Color.fromRGBO(148, 185, 255, 1))),
-                  onPressed: () {
-                    _showUsersDialog(context);
-                  },
-                  child: Icon(Icons.people_alt, color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-          // Половина экрана: чат
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(
-                        style: BorderStyle.solid,
-                        width: 5,
-                        color: Colors.white)),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(20),
-                              topRight: Radius.circular(20)),
-                          border: Border.all(
-                              style: BorderStyle.solid,
-                              width: 5,
-                              color: Colors.white)),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text('Чат: ${users.join(', ')}',
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: 1,
-                        itemBuilder: (context, index) {
-                          return Card(
-                            color: Colors.blueGrey,
-                            child: ListTile(
-                              title: Text('ramil'),
-                              subtitle: Text('привет!'),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(20),
-                              bottomRight: Radius.circular(20)),
-                          border: Border.all(
-                              style: BorderStyle.solid,
-                              width: 5,
-                              color: Colors.white)),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: TextField(
-                          decoration: InputDecoration(
-                              hintText: 'Введите сообщение...',
-                              suffixIcon: IconButton(
-                                icon: Icon(Icons.send),
-                                onPressed: () {
-                                  // Логика отправки сообщений
-                                },
-                              ),
-                              border: InputBorder.none),
+                // Верхняя треть экрана: Информация о встрече
+                isMeetOver
+                    ? Center(
+                        child: Text(
+                          "Время вышло",
+                          style: TextStyle(
+                              fontSize: 24, fontWeight: FontWeight.bold),
                         ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.av_timer_outlined, size: 60),
+                          Text(formattedTime, style: TextStyle(fontSize: 20)),
+                        ],
+                      ),
+                SizedBox(height: 10),
+
+                // Остальные элементы интерфейса
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton(
+                        style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(
+                                Color.fromRGBO(148, 185, 255, 1))),
+                        onPressed: () {
+                          _showMapDialog(context);
+                        },
+                        child: Icon(Icons.map_outlined, color: Colors.white),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton(
+                        style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(
+                                Color.fromRGBO(148, 185, 255, 1))),
+                        onPressed: () {
+                          _showUsersDialog(context);
+                        },
+                        child: Icon(Icons.people_alt, color: Colors.white),
                       ),
                     ),
                   ],
                 ),
+
+                // Половина экрана: чат
+                Expanded(
+                  child: Column(
+                    children: [
+                      // Чат
+                      Expanded(
+                        child: Container(
+                          margin: EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 5), // Отступы
+                          decoration: BoxDecoration(
+                            color:
+                                Theme.of(context).cardColor, // Фон контейнера
+                            borderRadius:
+                                BorderRadius.circular(20), // Закругление углов
+                            border: Border.all(
+                                color: Colors.grey.shade300,
+                                width: 3), // Граница
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(
+                                20), // Чтобы содержимое тоже имело закругленные углы
+                            child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('meets')
+                                  .doc(widget.meetId)
+                                  .collection('messages')
+                                  .orderBy('timestamp', descending: true)
+                                  .snapshots(),
+                              initialData: null,
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                        ConnectionState.waiting &&
+                                    snapshot.data == null) {
+                                  return Center(
+                                      child: CircularProgressIndicator());
+                                }
+
+                                final messages = snapshot.data?.docs ?? [];
+
+                                return ListView.builder(
+                                  reverse: true,
+                                  itemCount: messages.length,
+                                  itemBuilder: (context, index) {
+                                    final message = messages[index].data()
+                                        as Map<String, dynamic>;
+                                    final isCurrentUser =
+                                        message['sender'] == "$username";
+
+                                    return Align(
+                                      alignment: isCurrentUser
+                                          ? Alignment.centerRight
+                                          : Alignment.centerLeft,
+                                      child: Container(
+                                        margin: EdgeInsets.symmetric(
+                                            vertical: 5, horizontal: 10),
+                                        padding: EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: isCurrentUser
+                                              ? Colors.blue
+                                              : Colors.grey,
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          message['text'],
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Поле ввода сообщений
+                      Container(
+                        margin:
+                            EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.black
+                              .withOpacity(0.7), // Полупрозрачный фон
+                          borderRadius:
+                              BorderRadius.circular(20), // Закругление углов
+                          border: Border.all(
+                              color: Colors.grey.shade300, width: 3), // Граница
+                        ),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: messageController,
+                                style: TextStyle(
+                                    color: Colors.white), // Цвет текста
+                                decoration: InputDecoration(
+                                  hintText: "Введите сообщение...",
+                                  hintStyle: TextStyle(
+                                      color: Colors
+                                          .grey.shade400), // Цвет подсказки
+                                  border: InputBorder.none,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.send, color: Colors.orange),
+                              onPressed: _sendMessage,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            // Кнопка возврата
+            Positioned(
+              top: 10,
+              left: 10,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              MeetPage())); // Возврат на предыдущую страницу
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                      color: Colors.orange,
+                      shape: BoxShape.rectangle,
+                      borderRadius: BorderRadius.circular(10)),
+                  padding: EdgeInsets.all(8),
+                  child: Icon(
+                    Icons.arrow_back,
+                    color: Colors.black,
+                    size: 24,
+                  ),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
+  // Форматирование оставшегося времени (часы:минуты:секунды)
+
   // Метод для отображения карты в диалоговом окне
   void _showMapDialog(BuildContext context) {
+    ThemeProvider themeDate = ThemeProvider();
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -198,14 +334,11 @@ class _MeetProfilePageState extends State<MeetProfilePage> {
                 Expanded(
                   child: YandexMap(
                     onMapCreated: (controller) {
-                      if (!mapControllerCompleter.isCompleted) {
-                        mapControllerCompleter.complete(
-                            controller); // Завершаем Future только один раз
-                      }
                       _addMarker(
                           latitude, longitude); // Добавляем маркер на карту
                     },
                     mapObjects: mapObjects,
+                    nightModeEnabled: themeDate.returnBoolTheme(),
                   ),
                 ),
                 TextButton(
@@ -298,9 +431,6 @@ class _MeetProfilePageState extends State<MeetProfilePage> {
     final point = Point(latitude: latitude, longitude: longitude);
 
     final onTapLocation = PlacemarkMapObject(
-      onTap: (mapObject, point) {
-        _moveToResultLocation(point);
-      },
       opacity: 1,
       mapId: const MapObjectId('onTapLocation'),
       point: point,
@@ -314,6 +444,7 @@ class _MeetProfilePageState extends State<MeetProfilePage> {
     setState(() {
       mapObjects.add(onTapLocation);
     });
+    await _moveToResultLocation(point);
   }
 
   Future<void> _moveToResultLocation(Point point) async {

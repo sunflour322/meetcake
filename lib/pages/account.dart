@@ -129,53 +129,67 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   void _showCategoriesDialog(BuildContext context) {
+    // Локальная копия выбранных категорий для управления состоянием
+    List<String> tempSelectedCategories = List.from(selectedCategories);
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Выберите категории досуга'),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: allCategories.map((category) {
-                return CheckboxListTile(
-                  title: Text(category),
-                  value: selectedCategories.contains(category),
-                  onChanged: (bool? value) {
-                    setState(() {
-                      if (value != null) {
-                        if (value) {
-                          if (!selectedCategories.contains(category)) {
-                            selectedCategories.add(category);
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text('Выберите категории досуга'),
+              content: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: allCategories.map((category) {
+                    return CheckboxListTile(
+                      title: Text(category),
+                      value: tempSelectedCategories.contains(category),
+                      onChanged: (bool? value) {
+                        setDialogState(() {
+                          if (value != null) {
+                            if (value) {
+                              if (!tempSelectedCategories.contains(category)) {
+                                tempSelectedCategories.add(category);
+                              }
+                            } else {
+                              tempSelectedCategories.remove(category);
+                            }
                           }
-                        } else {
-                          selectedCategories.remove(category);
-                        }
-                      }
-                      print(selectedCategories);
-                    });
-                  },
-                );
-              }).toList(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                _saveCategories();
-                fetchCategories()
-                    .whenComplete(() => setState(() {})); // Закрываем диалог
-                Navigator.of(context).pop();
-              },
-              child: Text('Сохранить'),
-            ),
-          ],
+                        });
+
+                        // Обновляем сразу в Firestore и в локальном состоянии
+                        setState(() {
+                          selectedCategories =
+                              List.from(tempSelectedCategories);
+                        });
+
+                        _saveCategories();
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              actions: [
+                Center(
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('Закрыть'),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
-    ).whenComplete(() => setState(() {
-          _saveCategories().whenComplete(
-              () => fetchCategories().whenComplete(() => setState(() {})));
-        }));
+    ).whenComplete(() async {
+      // Обновление списка категорий после закрытия диалога
+      await fetchCategories();
+      setState(() {});
+    });
   }
 
   void _showFriendsBottomSheet(BuildContext context) {
@@ -317,8 +331,8 @@ class _AccountPageState extends State<AccountPage> {
           Navigator.push(
               context, MaterialPageRoute(builder: (context) => MeetPage()));
         },
-        backgroundColor: Color.fromRGBO(148, 185, 255, 1),
-        child: Icon(Icons.arrow_back_ios_sharp),
+        backgroundColor: Colors.orange,
+        child: Icon(Icons.arrow_back),
       ),
     );
   }

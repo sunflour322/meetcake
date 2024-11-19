@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:yandex_mapkit/yandex_mapkit.dart';
 
 class MeetsCRUD {
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
@@ -24,15 +25,15 @@ class MeetsCRUD {
     }
   }
 
-  Future<void> updateMeet(String id, String name, double lat, double long,
-      List<String> usersID) async {
+  Future<void> updateMeet(String id, String name, Point point,
+      List<String> usersID, List<String> requestUsers) async {
     try {
       await _firebaseFirestore.collection('meets').doc(id).update({
-        'uid': id,
         'name': name,
-        'lat': lat,
-        'long': long,
+        'lat': point.latitude,
+        'long': point.longitude,
         'users': usersID,
+        'requestUsers': requestUsers
       });
     } catch (e) {
       return;
@@ -41,7 +42,7 @@ class MeetsCRUD {
 
   Future<void> deleteMeet(dynamic docs) async {
     try {
-      await _firebaseFirestore.collection('meets').doc(docs.id).delete();
+      await _firebaseFirestore.collection('meets').doc(docs).delete();
     } catch (e) {
       return;
     }

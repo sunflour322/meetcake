@@ -269,9 +269,19 @@ class _MapScreenState extends State<MapScreen> {
                     },
                     child: Container(
                       alignment: Alignment.topRight,
-                      child: Image.asset(
-                        'assets/minilogo.png',
-                        scale: 2,
+                      child: Container(
+                        decoration: BoxDecoration(
+                            color: themeProvider.theme.primaryColorLight
+                                .withOpacity(0.3),
+                            border: Border.all(
+                                width: 2,
+                                style: BorderStyle.solid,
+                                color: Colors.white),
+                            borderRadius: BorderRadius.circular(10)),
+                        child: Image.asset(
+                          'assets/minilogo.png',
+                          scale: 2,
+                        ),
                       ),
                     ),
                   ),

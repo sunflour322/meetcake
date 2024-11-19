@@ -68,46 +68,6 @@ class _AuthPageState extends State<AuthPage> {
                                   ),
                                 ),
                                 const Spacer(),
-                                // Поле ввода телефона
-                                // TextFormField(
-                                //   keyboardType: TextInputType.phone,
-                                //   controller: nameController,
-                                //   style: const TextStyle(
-                                //       color: Colors.white, fontWeight: FontWeight.w500),
-                                //   decoration: const InputDecoration(
-                                //     labelText: "Name",
-                                //     labelStyle: TextStyle(
-                                //         color: Colors.white,
-                                //         fontWeight: FontWeight.w500),
-                                //     suffixIcon: Icon(
-                                //       Icons.phone,
-                                //       color: Colors.white,
-                                //     ),
-                                //     border: UnderlineInputBorder(
-                                //       borderSide: BorderSide(color: Colors.white),
-                                //     ),
-                                //     focusedBorder: UnderlineInputBorder(
-                                //       borderSide: BorderSide(color: Colors.white),
-                                //     ),
-                                //     enabledBorder: UnderlineInputBorder(
-                                //       borderSide: BorderSide(color: Colors.white),
-                                //     ),
-                                //     floatingLabelBehavior: FloatingLabelBehavior.auto,
-                                //   ),
-                                //   cursorColor: Colors.white,
-                                // ),
-                                // // Показываем поле ввода кода только если код был отправлен
-                                // _codeSent
-                                //     ? TextField(
-                                //         decoration: const InputDecoration(
-                                //             labelText: "Enter OTP"),
-                                //         onChanged: (value) {
-                                //           _smsCode = value;
-                                //         },
-                                //       )
-                                //     : Container(),
-                                // const Spacer(),
-                                // Поле для имени пользователя (можно использовать в будущем)
                                 TextFormField(
                                   controller: nameController,
                                   style: const TextStyle(
@@ -140,7 +100,6 @@ class _AuthPageState extends State<AuthPage> {
                                   cursorColor: Colors.white,
                                 ),
                                 const Spacer(),
-                                // Поле ввода пароля (если нужно для другого типа авторизации)
                                 TextFormField(
                                   controller: passwordController,
                                   obscureText: true,
@@ -175,7 +134,6 @@ class _AuthPageState extends State<AuthPage> {
                                 ),
                                 const Spacer(),
                                 const Spacer(),
-
                                 Container(
                                   width: double.infinity,
                                   child: ElevatedButton(
@@ -183,8 +141,8 @@ class _AuthPageState extends State<AuthPage> {
                                         backgroundColor: Colors.white,
                                         padding: const EdgeInsets.all(0),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              30), // Закругленные края
+                                          borderRadius:
+                                              BorderRadius.circular(30),
                                         )),
                                     onPressed: () async {
                                       if (nameController.text.isEmpty ||
@@ -205,7 +163,6 @@ class _AuthPageState extends State<AuthPage> {
                                     ),
                                   ),
                                 ),
-
                                 Center(
                                   child: TextButton(
                                     onPressed: () {
@@ -238,12 +195,10 @@ class _AuthPageState extends State<AuthPage> {
             right: 20,
             child: Row(
               children: [
-                // Кнопка смены языка
                 FloatingActionButton.small(
                   backgroundColor: Color.fromRGBO(148, 185, 255, 1),
-                  heroTag: 'languageBtn', // Уникальный тег для каждой кнопки
+                  heroTag: 'languageBtn',
                   onPressed: () {
-                    // Переключаем язык между английским и русским
                     if (localeProvider.locale.languageCode == 'en') {
                       localeProvider.setLocale(const Locale('ru'));
                     } else {
@@ -255,16 +210,12 @@ class _AuthPageState extends State<AuthPage> {
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 10), // Отступ между кнопками
-
-                // Кнопка смены темы (логика пока не добавлена)
+                const SizedBox(height: 10),
                 FloatingActionButton.small(
                   backgroundColor: Color.fromRGBO(148, 185, 255, 1),
-                  heroTag: 'themeBtn', // Уникальный тег для каждой кнопки
+                  heroTag: 'themeBtn',
                   onPressed: () {
                     themeProvider.toggleTheme();
-
-                    // Логика смены темы будет добавлена позже
                   },
                   child: const Icon(
                     Icons.brightness_6_rounded,

@@ -5,6 +5,7 @@ import 'package:meetcake/database/collections/meets_collection.dart';
 import 'package:meetcake/database/collections/user_collection.dart';
 import 'package:meetcake/generated/l10n.dart';
 import 'package:meetcake/pages/account.dart';
+import 'package:meetcake/pages/catalog.dart';
 import 'package:meetcake/pages/meet_profile.dart';
 import 'package:meetcake/user_service/user_service.dart';
 
@@ -73,7 +74,11 @@ class _MeetPageState extends State<MeetPage> {
       if (meetData['datetime'] is Timestamp) {
         meetDate = (meetData['datetime'] as Timestamp).toDate();
       } else if (meetData['datetime'] is String) {
-        meetDate = DateTime.parse(meetData['datetime']);
+        if (meetData['datetime'] != '') {
+          meetDate = DateTime.parse(meetData['datetime']);
+        } else {
+          meetDate = DateTime.now(); //
+        }
       } else {
         meetDate =
             DateTime.now(); // Если тип неожиданный, используем текущую дату
@@ -129,103 +134,155 @@ class _MeetPageState extends State<MeetPage> {
     return Scaffold(
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(.10, 50, 10, 0),
+          padding: const EdgeInsets.fromLTRB(10, 50, 10, 0),
           child: Column(
             children: [
-              // Если все списки пусты, показываем сообщение и картинку
-
-              // Иначе показываем списки
-
               // Список встреч, где текущий пользователь в users
-              _buildMeetList('Ваши встречи', userMeets),
+              _buildMeetList(
+                'Ваши встречи',
+                meetsCollection
+                    .where('users', arrayContains: username)
+                    .snapshots(),
+                false,
+              ),
+
               // Список встреч, где текущий пользователь в requestUsers
-              _buildMeetList('Запросы на встречи', requestMeets),
+              _buildMeetList(
+                'Запросы на встречи',
+                meetsCollection
+                    .where('requestUsers', arrayContains: username)
+                    .snapshots(),
+                true,
+              ),
+
               // Список прошедших встреч
-              _buildMeetList('Прошедшие встречи', pastMeets),
+              _buildMeetList(
+                'Прошедшие встречи',
+                meetsCollection.where('onHistory', isEqualTo: true).snapshots(),
+                false,
+              ),
             ],
           ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => AccountPage()));
-        },
-        backgroundColor: Color.fromRGBO(148, 185, 255, 1),
-        child: Icon(Icons.manage_accounts_outlined),
+      floatingActionButton: Stack(
+        children: [
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: FloatingActionButton(
+              heroTag: "accountButton",
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AccountPage()),
+                );
+              },
+              backgroundColor: Color.fromRGBO(148, 185, 255, 1),
+              child: Icon(Icons.manage_accounts_outlined),
+            ),
+          ),
+          Positioned(
+            bottom: 16,
+            left: 36,
+            child: FloatingActionButton(
+              heroTag: "backButton",
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => MapScreen()));
+              },
+              backgroundColor: Colors.orangeAccent,
+              child: Icon(Icons.arrow_back),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   // Виджет для отображения списка встреч
-  Widget _buildMeetList(String title, List<DocumentSnapshot> meetList) {
-    if (meetList.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Text(title, style: TextStyle(fontSize: 20)),
-      );
-    }
+  Widget _buildMeetList(
+      String title, Stream<QuerySnapshot> stream, bool isRequestList) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: stream,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        }
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            title,
-            style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-          ),
-        ),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          itemCount: meetList.length,
-          itemBuilder: (context, index) {
-            final meetData = meetList[index].data() as Map<String, dynamic>;
-            final userList = meetData['users'] as List<dynamic>;
+        final List<DocumentSnapshot> meetList = snapshot.data!.docs;
 
-            // Если userList содержит имена пользователей (строки)
-            String userNames =
-                userList.isEmpty ? 'No users' : userList.join(', ');
+        if (meetList.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(title, style: TextStyle(fontSize: 20)),
+          );
+        }
 
-            return Card(
-              margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              child: ListTile(
-                onTap: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              MeetProfilePage(meetData: meetData)));
-                },
-                title: Text(meetData['name'] ?? 'No Title'),
-                subtitle: Text('Участники: ' + userNames),
-                trailing: meetList == requestMeets
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            color: Colors.green,
-                            icon: Icon(Icons.check),
-                            onPressed: () {
-                              _acceptRequest(meetList[index].id);
-                            },
-                          ),
-                          IconButton(
-                            color: Colors.red,
-                            icon: Icon(Icons.cancel),
-                            onPressed: () {
-                              _declineRequest(meetList[index].id);
-                            },
-                          ),
-                        ],
-                      )
-                    : null,
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                title,
+                style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
               ),
-            );
-          },
-        ),
-      ],
+            ),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: meetList.length,
+              itemBuilder: (context, index) {
+                final meetData = meetList[index].data() as Map<String, dynamic>;
+                final userList = meetData['users'] as List<dynamic>;
+
+                String userNames =
+                    userList.isEmpty ? 'No users' : userList.join(', ');
+
+                return Card(
+                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  child: ListTile(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => MeetProfilePage(
+                                  meetData: meetData,
+                                  meetId: meetList[index].id)));
+                    },
+                    title: Text(meetData['name'] ?? 'No Title'),
+                    subtitle: Text('Участники: ' + userNames),
+                    trailing: isRequestList
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                color: Colors.green,
+                                icon: Icon(Icons.check),
+                                onPressed: () {
+                                  _acceptRequest(meetList[index].id);
+                                },
+                              ),
+                              IconButton(
+                                color: Colors.red,
+                                icon: Icon(Icons.cancel),
+                                onPressed: () {
+                                  _declineRequest(meetList[index].id);
+                                },
+                              ),
+                            ],
+                          )
+                        : null,
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }
