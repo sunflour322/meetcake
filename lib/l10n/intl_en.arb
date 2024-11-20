@@ -17,5 +17,18 @@
   "noOne": "no one..(",
   "nameMeet": "Name",
   "time": "Time",
-  "location": "Location"
+  "location": "Location",
+  "chooseCategory": "Select a leisure category",
+  "close": "close",
+  "addFriends": "Add friends",
+  "yourFriends": "Your friends",
+  "friendRequests": "Friend requests",
+  "friends": "Friends",
+  "categories": "Categories",
+  "yourMeets": "Your meets",
+  "meetsRequest": "Invitations to a meeting",
+  "pastMeetings": "Past meetings",
+  "members": "Members: ",
+  "theTimeHasCome": "The time has come",
+  "enterMessage": "Enter message..."
 }

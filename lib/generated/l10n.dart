@@ -239,6 +239,136 @@ class S {
       args: [],
     );
   }
+
+  /// `Select a leisure category`
+  String get chooseCategory {
+    return Intl.message(
+      'Select a leisure category',
+      name: 'chooseCategory',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `close`
+  String get close {
+    return Intl.message(
+      'close',
+      name: 'close',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Add friends`
+  String get addFriends {
+    return Intl.message(
+      'Add friends',
+      name: 'addFriends',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your friends`
+  String get yourFriends {
+    return Intl.message(
+      'Your friends',
+      name: 'yourFriends',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Friend requests`
+  String get friendRequests {
+    return Intl.message(
+      'Friend requests',
+      name: 'friendRequests',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Friends`
+  String get friends {
+    return Intl.message(
+      'Friends',
+      name: 'friends',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Categories`
+  String get categories {
+    return Intl.message(
+      'Categories',
+      name: 'categories',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your meets`
+  String get yourMeets {
+    return Intl.message(
+      'Your meets',
+      name: 'yourMeets',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invitations to a meeting`
+  String get meetsRequest {
+    return Intl.message(
+      'Invitations to a meeting',
+      name: 'meetsRequest',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Past meetings`
+  String get pastMeetings {
+    return Intl.message(
+      'Past meetings',
+      name: 'pastMeetings',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Members: `
+  String get members {
+    return Intl.message(
+      'Members: ',
+      name: 'members',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The time has come`
+  String get theTimeHasCome {
+    return Intl.message(
+      'The time has come',
+      name: 'theTimeHasCome',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter message...`
+  String get enterMessage {
+    return Intl.message(
+      'Enter message...',
+      name: 'enterMessage',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

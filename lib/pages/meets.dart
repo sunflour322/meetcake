@@ -139,7 +139,7 @@ class _MeetPageState extends State<MeetPage> {
             children: [
               // Список встреч, где текущий пользователь в users
               _buildMeetList(
-                'Ваши встречи',
+                S.of(context).yourMeets,
                 meetsCollection
                     .where('users', arrayContains: username)
                     .snapshots(),
@@ -148,7 +148,7 @@ class _MeetPageState extends State<MeetPage> {
 
               // Список встреч, где текущий пользователь в requestUsers
               _buildMeetList(
-                'Запросы на встречи',
+                S.of(context).meetsRequest,
                 meetsCollection
                     .where('requestUsers', arrayContains: username)
                     .snapshots(),
@@ -157,7 +157,7 @@ class _MeetPageState extends State<MeetPage> {
 
               // Список прошедших встреч
               _buildMeetList(
-                'Прошедшие встречи',
+                S.of(context).pastMeetings,
                 meetsCollection.where('onHistory', isEqualTo: true).snapshots(),
                 false,
               ),
@@ -254,7 +254,7 @@ class _MeetPageState extends State<MeetPage> {
                                   meetId: meetList[index].id)));
                     },
                     title: Text(meetData['name'] ?? 'No Title'),
-                    subtitle: Text('Участники: ' + userNames),
+                    subtitle: Text(S.of(context).members + userNames),
                     trailing: isRequestList
                         ? Row(
                             mainAxisSize: MainAxisSize.min,

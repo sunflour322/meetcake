@@ -6,12 +6,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meetcake/database/collections/user_collection.dart';
+import 'package:meetcake/generated/l10n.dart';
+import 'package:meetcake/pages/auth.dart';
 import 'package:meetcake/pages/friend_add.dart';
 import 'package:meetcake/pages/meets.dart';
+import 'package:meetcake/theme_lng/change_lng.dart';
+import 'package:meetcake/theme_lng/change_theme.dart';
 import 'package:meetcake/user_service/friendship_service.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:http/http.dart' as http;
 import 'package:googleapis_auth/googleapis_auth.dart';
+import 'package:meetcake/user_service/user_service.dart';
+import 'package:provider/provider.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -23,6 +29,7 @@ class AccountPage extends StatefulWidget {
 class _AccountPageState extends State<AccountPage> {
   final FriendshipService friendshipService = FriendshipService();
   final UserCRUD userCRUD = UserCRUD();
+  final AuthService _authService = AuthService();
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -138,7 +145,7 @@ class _AccountPageState extends State<AccountPage> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: Text('Выберите категории досуга'),
+              title: Text(S.of(context).chooseCategory),
               content: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,7 +184,7 @@ class _AccountPageState extends State<AccountPage> {
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
-                    child: Text('Закрыть'),
+                    child: Text(S.of(context).close),
                   ),
                 ),
               ],
@@ -231,7 +238,7 @@ class _AccountPageState extends State<AccountPage> {
                             builder: (context) => const FriendAddPage()),
                       );
                     },
-                    child: Text("Добавить друзей"),
+                    child: Text(S.of(context).addFriends),
                   ),
                   SizedBox(height: 10),
                   Expanded(
@@ -239,12 +246,12 @@ class _AccountPageState extends State<AccountPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildSectionTitle('Ваши друзья'),
+                          _buildSectionTitle(S.of(context).yourFriends),
                           ...friends
                               .map((friendName) =>
                                   _buildFriendTile(friendName, true))
                               .toList(),
-                          _buildSectionTitle('Запросы на дружбу'),
+                          _buildSectionTitle(S.of(context).friendRequests),
                           ...friendRequests
                               .map((friendName) =>
                                   _buildFriendTile(friendName, false))
@@ -264,6 +271,8 @@ class _AccountPageState extends State<AccountPage> {
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = Provider.of<LocaleProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -303,7 +312,7 @@ class _AccountPageState extends State<AccountPage> {
                     await _fetchFriendsCount();
                   },
                   child: Text(
-                    'Categories: ${categoriesCount.length}',
+                    S.of(context).categories + ': ${categoriesCount.length}',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
@@ -316,7 +325,7 @@ class _AccountPageState extends State<AccountPage> {
                     await fetchCategories();
                   },
                   child: Text(
-                    'Friends: $friendsCount',
+                    S.of(context).friends + ': $friendsCount',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
@@ -326,13 +335,57 @@ class _AccountPageState extends State<AccountPage> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => MeetPage()));
-        },
-        backgroundColor: Colors.orange,
-        child: Icon(Icons.arrow_back),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          FloatingActionButton(
+            heroTag: 'back',
+            onPressed: () {
+              Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => MeetPage()));
+            },
+            backgroundColor: Colors.orangeAccent,
+            child: Icon(Icons.arrow_back),
+          ),
+          SizedBox(width: 40),
+
+          FloatingActionButton(
+            heroTag: 'logout',
+            onPressed: () {
+              _authService.logOut().whenComplete(() => setState(() {}));
+              Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => AuthPage()));
+            },
+            backgroundColor: Colors.orangeAccent,
+            child: Icon(Icons.exit_to_app),
+          ),
+
+          // Right Button - Theme Toggle
+          SizedBox(width: 40),
+          FloatingActionButton(
+            heroTag: 'theme',
+            onPressed: () {
+              themeProvider.toggleTheme();
+            },
+            backgroundColor: Color.fromRGBO(148, 185, 255, 1),
+            child: Icon(Icons.brightness_6),
+          ),
+
+          // Far Right Button - Language Toggle
+          SizedBox(width: 40),
+          FloatingActionButton(
+            heroTag: 'lng',
+            onPressed: () {
+              if (localeProvider.locale.languageCode == 'en') {
+                localeProvider.setLocale(const Locale('ru'));
+              } else {
+                localeProvider.setLocale(const Locale('en'));
+              }
+            },
+            backgroundColor: Color.fromRGBO(148, 185, 255, 1),
+            child: Icon(Icons.language),
+          ),
+        ],
       ),
     );
   }

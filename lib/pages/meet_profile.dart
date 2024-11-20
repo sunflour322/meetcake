@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:meetcake/database/collections/user_collection.dart';
+import 'package:meetcake/generated/l10n.dart';
 import 'package:meetcake/pages/meets.dart';
 import 'package:meetcake/theme_lng/change_theme.dart';
 import 'package:provider/provider.dart';
@@ -121,7 +122,7 @@ class _MeetProfilePageState extends State<MeetProfilePage> {
                 isMeetOver
                     ? Center(
                         child: Text(
-                          "Время вышло",
+                          S.of(context).theTimeHasCome,
                           style: TextStyle(
                               fontSize: 24, fontWeight: FontWeight.bold),
                         ),
@@ -165,6 +166,20 @@ class _MeetProfilePageState extends State<MeetProfilePage> {
                     ),
                   ],
                 ),
+                if (widget.meetData['place'] != '')
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(width: 3, color: Colors.white)),
+                      alignment: Alignment.center,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(widget.meetData['place']),
+                      ),
+                    ),
+                  ),
 
                 // Половина экрана: чат
                 Expanded(
@@ -229,9 +244,19 @@ class _MeetProfilePageState extends State<MeetProfilePage> {
                                           borderRadius:
                                               BorderRadius.circular(10),
                                         ),
-                                        child: Text(
-                                          message['text'],
-                                          style: TextStyle(color: Colors.white),
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              message['sender'],
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                            Text(
+                                              message['text'],
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     );
@@ -265,7 +290,7 @@ class _MeetProfilePageState extends State<MeetProfilePage> {
                                 style: TextStyle(
                                     color: Colors.white), // Цвет текста
                                 decoration: InputDecoration(
-                                  hintText: "Введите сообщение...",
+                                  hintText: S.of(context).enterMessage,
                                   hintStyle: TextStyle(
                                       color: Colors
                                           .grey.shade400), // Цвет подсказки
@@ -300,7 +325,7 @@ class _MeetProfilePageState extends State<MeetProfilePage> {
                 },
                 child: Container(
                   decoration: BoxDecoration(
-                      color: Colors.orange,
+                      color: Colors.orangeAccent,
                       shape: BoxShape.rectangle,
                       borderRadius: BorderRadius.circular(10)),
                   padding: EdgeInsets.all(8),
@@ -328,21 +353,33 @@ class _MeetProfilePageState extends State<MeetProfilePage> {
       builder: (BuildContext context) {
         return Dialog(
           child: Container(
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
             height: 400,
             child: Column(
               children: [
                 Expanded(
                   child: YandexMap(
-                    onMapCreated: (controller) {
-                      _addMarker(
-                          latitude, longitude); // Добавляем маркер на карту
+                    onMapCreated: (controller) async {
+                      if (!mapControllerCompleter.isCompleted) {
+                        mapControllerCompleter.complete(controller);
+                        final point =
+                            Point(latitude: latitude, longitude: longitude);
+                        await _moveToResultLocation(point);
+                      } // Завершаем Future
+                      // Добавляем маркер // Добавляем маркер на карту
                     },
                     mapObjects: mapObjects,
                     nightModeEnabled: themeDate.returnBoolTheme(),
                   ),
                 ),
                 TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => MeetProfilePage(
+                                meetId: widget.meetId,
+                                meetData: widget.meetData,
+                              ))),
                   child: Text("Закрыть"),
                 ),
               ],
@@ -444,13 +481,16 @@ class _MeetProfilePageState extends State<MeetProfilePage> {
     setState(() {
       mapObjects.add(onTapLocation);
     });
-    await _moveToResultLocation(point);
+
+    await _moveToResultLocation(
+        point); // Перемещаем камеру только после обновления state
   }
 
   Future<void> _moveToResultLocation(Point point) async {
-    final controller = await mapControllerCompleter.future;
+    final controller =
+        await mapControllerCompleter.future; // Дождитесь готовности карты
     controller.moveCamera(
-      CameraUpdate.newCameraPosition(CameraPosition(target: point, zoom: 16)),
+      CameraUpdate.newCameraPosition(CameraPosition(target: point, zoom: 20)),
       animation: const MapAnimation(type: MapAnimationType.smooth, duration: 2),
     );
   }

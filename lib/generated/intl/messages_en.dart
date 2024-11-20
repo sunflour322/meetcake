@@ -22,28 +22,46 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+        "addFriends": MessageLookupByLibrary.simpleMessage("Add friends"),
+        "categories": MessageLookupByLibrary.simpleMessage("Categories"),
         "chooseAnotherName":
             MessageLookupByLibrary.simpleMessage("Choose another name"),
+        "chooseCategory":
+            MessageLookupByLibrary.simpleMessage("Select a leisure category"),
+        "close": MessageLookupByLibrary.simpleMessage("close"),
         "dontHaveAnAccountRegister": MessageLookupByLibrary.simpleMessage(
             "Don\'t have an account? REGISTER"),
         "email": MessageLookupByLibrary.simpleMessage("Email"),
         "en": MessageLookupByLibrary.simpleMessage("en"),
+        "enterMessage":
+            MessageLookupByLibrary.simpleMessage("Enter message..."),
         "fillInTheFields":
             MessageLookupByLibrary.simpleMessage("Fill in the fields!"),
+        "friendRequests":
+            MessageLookupByLibrary.simpleMessage("Friend requests"),
+        "friends": MessageLookupByLibrary.simpleMessage("Friends"),
         "haveAnAccountAuthorize":
             MessageLookupByLibrary.simpleMessage("Have an account? AUTHORIZE"),
         "location": MessageLookupByLibrary.simpleMessage("Location"),
         "logIn": MessageLookupByLibrary.simpleMessage("Log In"),
         "login": MessageLookupByLibrary.simpleMessage("Login"),
+        "meetsRequest":
+            MessageLookupByLibrary.simpleMessage("Invitations to a meeting"),
+        "members": MessageLookupByLibrary.simpleMessage("Members: "),
         "name": MessageLookupByLibrary.simpleMessage("User name"),
         "nameMeet": MessageLookupByLibrary.simpleMessage("Name"),
         "noMeetings": MessageLookupByLibrary.simpleMessage("no meetings..("),
         "noOne": MessageLookupByLibrary.simpleMessage("no one..("),
         "password": MessageLookupByLibrary.simpleMessage("Password"),
+        "pastMeetings": MessageLookupByLibrary.simpleMessage("Past meetings"),
         "register": MessageLookupByLibrary.simpleMessage("Register"),
         "registration": MessageLookupByLibrary.simpleMessage("Registration"),
         "search": MessageLookupByLibrary.simpleMessage("Search..."),
         "success": MessageLookupByLibrary.simpleMessage("Success"),
-        "time": MessageLookupByLibrary.simpleMessage("Time")
+        "theTimeHasCome":
+            MessageLookupByLibrary.simpleMessage("The time has come"),
+        "time": MessageLookupByLibrary.simpleMessage("Time"),
+        "yourFriends": MessageLookupByLibrary.simpleMessage("Your friends"),
+        "yourMeets": MessageLookupByLibrary.simpleMessage("Your meets")
       };
 }

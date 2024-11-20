@@ -102,29 +102,6 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  // void _showOrganizationDetails(SearchItemBusinessMetadata? metadata) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (context) {
-  //       return AlertDialog(
-  //         title: Text(metadata?.name ?? "Организация"),
-  //         content: Column(
-  //           children: [
-  //             if (metadata?.address.formattedAddress != null)
-  //               Text("Адрес: ${metadata?.address.formattedAddress}"),
-  //           ],
-  //         ),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () => Navigator.pop(context),
-  //             child: Text("Закрыть"),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-
   Future<void> _displaySelectedPlaceOnMap(SearchItem selectedItem) async {
     // Clear any previous search markers
     mapObjects
@@ -428,8 +405,7 @@ class _MapScreenState extends State<MapScreen> {
           size: 40,
         ),
         onPressed: () {
-          authService.logOut();
-          //_initPermission();
+          _initPermission();
         },
       ),
     );

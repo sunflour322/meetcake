@@ -17,5 +17,18 @@
   "noOne": "никого..(",
   "nameMeet": "Название",
   "time": "Время",
-  "location": "Место"
+  "location": "Место",
+  "chooseCategory": "Выберите категории досуга",
+  "close": "Закрыть",
+  "addFriends": "Добавить друзей",
+  "yourFriends": "Ваши друзья",
+  "friendRequests": "Запросы на дружбу",
+  "friends": "Друзья",
+  "categories": "Категории",
+  "yourMeets": "Ваши встречи",
+  "meetsRequest": "Приглашения на встречи",
+  "pastMeetings": "Прошедшие встречи",
+  "members": "Участники: ",
+  "theTimeHasCome": "Время пришло",
+  "enterMessage": "Введите сообщение..."
 }

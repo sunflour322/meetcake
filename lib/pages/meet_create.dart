@@ -88,7 +88,6 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
   }
 
   void locationControllerValue() {
-    nameController.text = widget.meetId.toString();
     if (widget.searchItem != null) {
       locationController.text =
           '${widget.searchItem!.businessMetadata!.name} (${widget.searchItem!.businessMetadata!.address.formattedAddress})';
@@ -128,125 +127,135 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => FractionallySizedBox(
-        heightFactor: 0.75, // Увеличим высоту для удобства
-        widthFactor: 0.95,
-        child: StreamBuilder<DocumentSnapshot>(
-          stream: FirebaseFirestore.instance
-              .collection('users')
-              .doc(userId)
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return Center(child: CircularProgressIndicator());
-            }
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return FractionallySizedBox(
+              heightFactor: 0.5,
+              widthFactor: 0.95,
+              child: StreamBuilder<DocumentSnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(userId)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(child: CircularProgressIndicator());
+                  }
 
-            List<dynamic> friends = snapshot.data!['friends'] ?? [];
+                  List<dynamic> friends = snapshot.data!['friends'] ?? [];
 
-            // Список категорий
-            List<String> categories = [
-              'Все',
-              'Спорт',
-              'Кино',
-              'Музыка',
-              'Чтение',
-              'Природа',
-              'Путешествия',
-              'Танцы',
-              'Готовка'
-            ];
+                  // Список категорий
+                  List<String> categories = [
+                    'Все',
+                    'Спорт',
+                    'Кино',
+                    'Музыка',
+                    'Чтение',
+                    'Природа',
+                    'Путешествия',
+                    'Танцы',
+                    'Готовка'
+                  ];
 
-            return FutureBuilder<List<dynamic>>(
-              future: fetchRequestUser(),
-              builder: (context, requestSnapshot) {
-                if (!requestSnapshot.hasData) {
-                  return Center(child: CircularProgressIndicator());
-                }
+                  return FutureBuilder<List<dynamic>>(
+                    future: fetchRequestUser(),
+                    builder: (context, requestSnapshot) {
+                      if (!requestSnapshot.hasData) {
+                        return Center(child: CircularProgressIndicator());
+                      }
 
-                requestUsers = requestSnapshot.data!;
+                      requestUsers = requestSnapshot.data!;
 
-                return Column(
-                  children: [
-                    SizedBox(height: 10),
-                    // Добавляем кнопку для выбора категории
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: DropdownButton<String>(
-                        value: selectedCategory,
-                        onChanged: (newCategory) {
-                          setState(() {
-                            selectedCategory = newCategory!;
-                          });
-                        },
-                        items: categories
-                            .map<DropdownMenuItem<String>>((category) {
-                          return DropdownMenuItem<String>(
-                            value: category,
-                            child: Text(category),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildSectionTitle('Ваши друзья'),
-                            // Фильтруем друзей по выбранной категории
-                            ...friends.map((friendName) {
-                              bool isSelected =
-                                  requestUsers.contains(friendName);
-                              return FutureBuilder<QuerySnapshot>(
-                                future: FirebaseFirestore.instance
-                                    .collection('users')
-                                    .where('username', isEqualTo: friendName)
-                                    .limit(1)
-                                    .get(),
-                                builder: (context, friendSnapshot) {
-                                  if (!friendSnapshot.hasData) {
-                                    return Center(
-                                        child: CircularProgressIndicator());
-                                  }
-
-                                  if (friendSnapshot.data!.docs.isEmpty) {
-                                    return Container();
-                                  }
-
-                                  Map<String, dynamic> friendData =
-                                      friendSnapshot.data!.docs.first.data()
-                                          as Map<String, dynamic>;
-                                  List<dynamic> friendCategories =
-                                      friendData['categories'] ?? [];
-
-                                  // Если категория друга соответствует выбранной, показываем его
-                                  bool isCategoryMatched =
-                                      selectedCategory == 'Все' ||
-                                          friendCategories
-                                              .contains(selectedCategory);
-
-                                  print(selectedCategory);
-                                  if (isCategoryMatched) {
-                                    return _buildFriendTile(
-                                        friendName, isSelected, requestUsers);
-                                  } else {
-                                    return Container();
-                                  }
+                      return Column(
+                        children: [
+                          SizedBox(height: 10),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: DropdownButton<String>(
+                              value: selectedCategory,
+                              onChanged: (newCategory) {
+                                setModalState(() {
+                                  selectedCategory = newCategory!;
+                                });
+                              },
+                              items: categories.map<DropdownMenuItem<String>>(
+                                (category) {
+                                  return DropdownMenuItem<String>(
+                                    value: category,
+                                    child: Text(category),
+                                  );
                                 },
-                              );
-                            }).toList(),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
+                              ).toList(),
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildSectionTitle(S.of(context).yourFriends),
+                                  // Фильтруем друзей по выбранной категории
+                                  ...friends.map((friendName) {
+                                    bool isSelected =
+                                        requestUsers.contains(friendName);
+                                    return FutureBuilder<QuerySnapshot>(
+                                      future: FirebaseFirestore.instance
+                                          .collection('users')
+                                          .where('username',
+                                              isEqualTo: friendName)
+                                          .limit(1)
+                                          .get(),
+                                      builder: (context, friendSnapshot) {
+                                        if (!friendSnapshot.hasData) {
+                                          return Center(
+                                              child:
+                                                  CircularProgressIndicator());
+                                        }
+
+                                        if (friendSnapshot.data!.docs.isEmpty) {
+                                          return Container();
+                                        }
+
+                                        Map<String, dynamic> friendData =
+                                            friendSnapshot.data!.docs.first
+                                                .data() as Map<String, dynamic>;
+                                        List<dynamic> friendCategories =
+                                            friendData['categories'] ?? [];
+
+                                        // Если категория друга соответствует выбранной, показываем его
+                                        bool isCategoryMatched =
+                                            selectedCategory == 'Все' ||
+                                                friendCategories
+                                                    .contains(selectedCategory);
+
+                                        if (isCategoryMatched) {
+                                          return _buildFriendTile(
+                                              friendName,
+                                              isSelected,
+                                              requestUsers,
+                                              setModalState);
+                                        } else {
+                                          return Container();
+                                        }
+                                      },
+                                    );
+                                  }).toList(),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
             );
           },
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -268,8 +277,8 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
     );
   }
 
-  Widget _buildFriendTile(
-      String friendName, bool isSelected, List<dynamic> requestUsers) {
+  Widget _buildFriendTile(String friendName, bool isSelected,
+      List<dynamic> requestUsers, StateSetter setModalState) {
     return ListTile(
       leading: FutureBuilder<String?>(
         future: friendshipService.fetchUserImageUrl(friendName),
@@ -288,13 +297,12 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
           ? IconButton(
               onPressed: () async {
                 // Обновляем локальный список requestUsers
-                setState(() {});
+                setModalState(() {
+                  requestUsers.remove(friendName);
+                });
 
                 // Обновляем Firestore
-                await _updateUserRequests(friendName, remove: true)
-                    .whenComplete(() => setState(() {
-                          requestUsers.remove(friendName);
-                        }));
+                await _updateUserRequests(friendName, remove: true);
                 updateCompletion();
               },
               icon: Icon(
@@ -305,15 +313,12 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
           : IconButton(
               onPressed: () async {
                 // Обновляем локальный список requestUsers
-                setState(() {
+                setModalState(() {
                   requestUsers.add(friendName);
                 });
 
                 // Обновляем Firestore
-                await _updateUserRequests(friendName, remove: false)
-                    .whenComplete(() => setState(() {
-                          requestUsers.add(friendName);
-                        }));
+                await _updateUserRequests(friendName, remove: false);
                 updateCompletion();
               },
               icon: Icon(
@@ -335,15 +340,22 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
         await meetDocRef.update({
           'requestUsers': FieldValue.arrayRemove([friendName]),
         });
+        // Обновляем локальный список
+        setState(() {
+          requestUsers.remove(friendName);
+        });
       } else {
         // Добавляем друга в список запросов
         await meetDocRef.update({
           'requestUsers': FieldValue.arrayUnion([friendName]),
         });
+        // Обновляем локальный список
+        setState(() {
+          requestUsers.add(friendName);
+        });
       }
     } catch (e) {
       print('Ошибка при обновлении userRequests: $e');
-      // Можно добавить обработку ошибок, например, показать Toast
     }
   }
 
@@ -641,7 +653,7 @@ class _MeetCreatePageState extends State<MeetCreatePage> {
           children: [
             FloatingActionButton(
               heroTag: 'backButton',
-              backgroundColor: Colors.orange,
+              backgroundColor: Colors.orangeAccent,
               onPressed: () async {
                 Navigator.push(context,
                     MaterialPageRoute(builder: (context) => MapScreen()));

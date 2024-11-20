@@ -22,28 +22,46 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+        "addFriends": MessageLookupByLibrary.simpleMessage("Добавить друзей"),
+        "categories": MessageLookupByLibrary.simpleMessage("Категории"),
         "chooseAnotherName":
             MessageLookupByLibrary.simpleMessage("Имя занято!"),
+        "chooseCategory":
+            MessageLookupByLibrary.simpleMessage("Выберите категории досуга"),
+        "close": MessageLookupByLibrary.simpleMessage("Закрыть"),
         "dontHaveAnAccountRegister":
             MessageLookupByLibrary.simpleMessage("Нет аккаунта? РЕГИСТРАЦИЯ"),
         "email": MessageLookupByLibrary.simpleMessage("Email"),
         "en": MessageLookupByLibrary.simpleMessage("ru"),
+        "enterMessage":
+            MessageLookupByLibrary.simpleMessage("Введите сообщение..."),
         "fillInTheFields":
             MessageLookupByLibrary.simpleMessage("Заполните все поля!"),
+        "friendRequests":
+            MessageLookupByLibrary.simpleMessage("Запросы на дружбу"),
+        "friends": MessageLookupByLibrary.simpleMessage("Друзья"),
         "haveAnAccountAuthorize": MessageLookupByLibrary.simpleMessage(
             "Уже есть аккаунт? АВТОРИЗАЦИЯ"),
         "location": MessageLookupByLibrary.simpleMessage("Место"),
         "logIn": MessageLookupByLibrary.simpleMessage("Войти"),
         "login": MessageLookupByLibrary.simpleMessage("Авторизация"),
+        "meetsRequest":
+            MessageLookupByLibrary.simpleMessage("Приглашения на встречи"),
+        "members": MessageLookupByLibrary.simpleMessage("Участники: "),
         "name": MessageLookupByLibrary.simpleMessage("Имя пользователя"),
         "nameMeet": MessageLookupByLibrary.simpleMessage("Название"),
         "noMeetings": MessageLookupByLibrary.simpleMessage("нет встреч..("),
         "noOne": MessageLookupByLibrary.simpleMessage("никого..("),
         "password": MessageLookupByLibrary.simpleMessage("Пароль"),
+        "pastMeetings":
+            MessageLookupByLibrary.simpleMessage("Прошедшие встречи"),
         "register": MessageLookupByLibrary.simpleMessage("Зарегистрироваться"),
         "registration": MessageLookupByLibrary.simpleMessage("Регистрация"),
         "search": MessageLookupByLibrary.simpleMessage("Поиск..."),
         "success": MessageLookupByLibrary.simpleMessage("Успешно"),
-        "time": MessageLookupByLibrary.simpleMessage("Время")
+        "theTimeHasCome": MessageLookupByLibrary.simpleMessage("Время пришло"),
+        "time": MessageLookupByLibrary.simpleMessage("Время"),
+        "yourFriends": MessageLookupByLibrary.simpleMessage("Ваши друзья"),
+        "yourMeets": MessageLookupByLibrary.simpleMessage("Ваши встречи")
       };
 }
