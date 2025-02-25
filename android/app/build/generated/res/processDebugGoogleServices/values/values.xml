@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gcm_defaultSenderId" translatable="false">874539196455</string>
+    <string name="google_api_key" translatable="false">AIzaSyBKakS4dzfbmsFSCP4NzN9eZ6SDLSeCcvo</string>
+    <string name="google_app_id" translatable="false">1:874539196455:android:e27850e2f154d2af472e02</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyBKakS4dzfbmsFSCP4NzN9eZ6SDLSeCcvo</string>
+    <string name="google_storage_bucket" translatable="false">flutter-films-mukachev.appspot.com</string>
+    <string name="project_id" translatable="false">flutter-films-mukachev</string>
+</resources>
